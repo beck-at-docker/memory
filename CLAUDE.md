@@ -4,6 +4,25 @@ This project includes a personal memory system that can be integrated with Claud
 
 ## Quick Start
 
+### Option A: Full Interactive Integration with Claude
+
+1. **Setup (first time only):**
+   ```bash
+   python3 setup_env.py
+   python3 setup_claude_integration.py
+   ```
+
+2. **Start interactive memory system:**
+   ```bash
+   ./start_interactive_memory.sh
+   ```
+
+3. **Configure Claude Code** (follow instructions from setup script):
+   - Enable MCP server: `memory-system`
+   - Add hooks configuration for automatic monitoring
+
+### Option B: Basic Memory Server Only
+
 1. **Setup (first time only):**
    ```bash
    python3 setup_env.py
@@ -13,9 +32,8 @@ This project includes a personal memory system that can be integrated with Claud
    ```bash
    ./start_server.sh
    ```
-   The server runs on `http://127.0.0.1:5000`
 
-3. **Test the connection (in another terminal):**
+3. **Test manually:**
    ```bash
    source memory_env/bin/activate
    python3 claude_memory_client.py
@@ -36,13 +54,26 @@ The memory system provides contextual insights based on conversation content. It
 - `GET /status` - System status
 - `GET /entities` - Entity statistics
 
-## For Claude Integration
+## Interactive Claude Integration
 
-When discussing topics related to A, N, X, trust, boundaries, trauma, or parenting, Claude can:
+With the full integration setup, Claude automatically:
 
-1. Query the memory system for relevant insights
-2. Surface anchoring truths during difficult conversations
-3. Automatically capture new insights from conversations
+### 🔍 **Auto-Insight Retrieval**
+- Detects when you mention relationships, trust, boundaries, trauma, parenting
+- Automatically surfaces relevant insights without you asking
+- Provides anchoring during crisis or difficult moments
+
+### 🧠 **MCP Tools Available to Claude**
+- `query_memory` - Search for relevant insights
+- `add_insight` - Capture new breakthroughs or strategies  
+- `detect_conversation_insights` - Analyze conversations for patterns
+- `get_memory_status` - Check system status
+
+### 📝 **Conversation Monitoring**
+- Watches for breakthrough language ("I realized that...")
+- Suggests capturing effective strategies
+- Detects crisis language and offers anchoring
+- Learns from your conversations automatically
 
 ## Example Usage
 
