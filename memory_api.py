@@ -1,0 +1,174 @@
+#!/usr/bin/env python3
+"""
+Memory API for Claude Project Integration
+Lightweight HTTP API for querying and adding insights
+"""
+
+from flask import Flask, request, jsonify
+from insight_system_simple import SimpleContextualInsightRetrieval, Insight
+from datetime import datetime
+import uuid
+import json
+import threading
+import os
+
+app = Flask(__name__)
+
+# Global memory system instance
+memory_system = None
+
+def init_memory_system():
+    """Initialize the memory system with demo data"""
+    global memory_system
+    memory_system = SimpleContextualInsightRetrieval("claude_project.db")
+    
+    # Check if we need to setup demo data
+    if not os.path.exists("claude_project.db") or os.path.getsize("claude_project.db") < 1000:
+        setup_demo_data()
+
+def setup_demo_data():
+    """Setup demo insights"""
+    demo_insights = [
+        Insight(
+            id=str(uuid.uuid4()),
+            content="A is trustworthy. His word is enough. This is bedrock truth.",
+            entities={"A"},
+            themes={"trust", "relationships"},
+            effectiveness_score=1.0,
+            layer="surface",
+            insight_type="anchor",
+            timestamp=datetime.now(),
+            source_file="claude_integration",
+            context="Core trust anchor for A"
+        ),
+        Insight(
+            id=str(uuid.uuid4()),
+            content="Taking trauma responses to therapy protects relationship with A",
+            entities={"A", "trauma_responses"},
+            themes={"strategies", "relationships", "trauma"},
+            effectiveness_score=0.9,
+            layer="surface",
+            insight_type="strategy",
+            timestamp=datetime.now(),
+            source_file="claude_integration",
+            context="Effective strategy for managing activation"
+        ),
+        Insight(
+            id=str(uuid.uuid4()),
+            content="Boundaries with N are love, not cruelty. Hold the line with love instead of fear.",
+            entities={"N"},
+            themes={"parenting", "boundaries", "strategies"},
+            effectiveness_score=0.9,
+            layer="surface",
+            insight_type="strategy",
+            timestamp=datetime.now(),
+            source_file="claude_integration",
+            context="Core parenting boundary philosophy"
+        ),
+        Insight(
+            id=str(uuid.uuid4()),
+            content="X's voice creates inadequacy-scanning. Recognize it as X, not truth.",
+            entities={"X", "trauma_responses"},
+            themes={"trauma", "strategies", "recognition"},
+            effectiveness_score=0.9,
+            layer="surface",
+            insight_type="anchor",
+            timestamp=datetime.now(),
+            source_file="claude_integration",
+            context="Recognition strategy for X's voice"
+        )
+    ]
+    
+    for insight in demo_insights:
+        memory_system.add_insight(insight)
+
+@app.route('/query', methods=['POST'])
+def query_insights():
+    """Query insights based on input text"""
+    data = request.json
+    user_input = data.get('input', '')
+    max_results = data.get('max_results', 3)
+    
+    if not user_input:
+        return jsonify({"error": "No input provided"}), 400
+    
+    insights = memory_system.retrieve_contextual_insights(user_input)
+    
+    # Format for Claude
+    formatted_insights = []
+    for insight in insights.get("surface", [])[:max_results]:
+        formatted_insights.append({
+            "content": insight.content,
+            "type": insight.insight_type,
+            "entities": list(insight.entities),
+            "themes": list(insight.themes),
+            "effectiveness": insight.effectiveness_score,
+            "timestamp": insight.timestamp.isoformat()
+        })
+    
+    return jsonify({
+        "insights": formatted_insights,
+        "triggers": memory_system.detect_context_triggers(user_input),
+        "total_available": len(insights.get("surface", []) + insights.get("mid", []))
+    })
+
+@app.route('/add', methods=['POST'])
+def add_insight():
+    """Add new insight"""
+    data = request.json
+    
+    insight = Insight(
+        id=str(uuid.uuid4()),
+        content=data.get('content', ''),
+        entities=set(data.get('entities', [])),
+        themes=set(data.get('themes', [])),
+        effectiveness_score=data.get('effectiveness_score', 0.5),
+        layer=data.get('layer', 'surface'),
+        insight_type=data.get('insight_type', 'observation'),
+        timestamp=datetime.now(),
+        source_file=data.get('source_file', 'claude_conversation'),
+        context=data.get('context', 'Added via Claude')
+    )
+    
+    memory_system.add_insight(insight)
+    
+    return jsonify({
+        "success": True,
+        "insight_id": insight.id,
+        "message": "Insight added successfully"
+    })
+
+@app.route('/status', methods=['GET'])
+def status():
+    """Get system status"""
+    total_insights = len(memory_system.get_all_insights())
+    
+    return jsonify({
+        "status": "running",
+        "total_insights": total_insights,
+        "entities": list(memory_system.get_all_entities()),
+        "version": "1.0.0"
+    })
+
+@app.route('/entities', methods=['GET'])
+def get_entities():
+    """Get all entities being tracked"""
+    entities = memory_system.get_all_entities()
+    
+    entity_stats = {}
+    for entity in entities:
+        insights = memory_system._get_insights_by_entity(entity)
+        entity_stats[entity] = {
+            "count": len(insights),
+            "latest": max(i.timestamp for i in insights).isoformat() if insights else None
+        }
+    
+    return jsonify(entity_stats)
+
+def run_server():
+    """Run the Flask server"""
+    init_memory_system()
+    app.run(host='127.0.0.1', port=5000, debug=False, use_reloader=False)
+
+if __name__ == "__main__":
+    run_server()
