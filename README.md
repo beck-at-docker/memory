@@ -127,6 +127,141 @@ This starts:
 - Memory API server on port 5001
 - Background process for Claude integration
 
+## 💬 Using the Memory System with Claude
+
+### Automatic Insight Retrieval
+
+Once set up, the memory system works automatically in your Claude conversations. No special commands needed!
+
+#### Triggering Memory Retrieval
+
+The system automatically surfaces relevant insights when you mention:
+
+**People/Entities:**
+```
+You: "I'm worried about trusting A"
+Claude: [Automatically retrieves insights about A and trust]
+```
+
+**Themes:**
+```
+You: "N is being difficult about boundaries again"
+Claude: [Surfaces boundary strategies and parenting insights]
+```
+
+**Crisis Language:**
+```
+You: "I'm falling apart and can't handle this"
+Claude: [Immediately provides crisis anchors and grounding insights]
+```
+
+#### What You'll See
+
+When memory triggers activate, Claude will naturally integrate insights into the conversation:
+
+```
+You: "I'm second-guessing whether A is trustworthy"
+
+Claude: I understand that uncertainty can be challenging. Based on your previous insights, there are some important anchors to remember:
+
+• A is trustworthy - his word is enough (bedrock truth from your experience)
+• Taking trauma responses to therapy helps protect your relationship with A
+• Trust is built through consistent actions over time, and A has demonstrated this
+
+These insights from your journey suggest that the second-guessing might be more about processing trauma patterns than about A's actual trustworthiness. What specifically is triggering these doubts today?
+```
+
+### Using MCP Tools Directly
+
+Claude also has access to memory tools you can request explicitly:
+
+#### Query Memory
+```
+You: "Can you search my memory for insights about parenting strategies?"
+Claude: [Uses query_memory tool to search and return relevant insights]
+```
+
+#### Add New Insights
+```
+You: "I just realized something important - can you save this breakthrough to my memory?"
+Claude: [Uses add_insight tool to capture the new understanding]
+```
+
+#### Check Memory Status
+```
+You: "How many insights do I have stored about trust?"
+Claude: [Uses get_memory_status tool to provide statistics]
+```
+
+### Conversation Monitoring (With Hooks Enabled)
+
+The system automatically watches for:
+
+#### Breakthrough Language
+```
+You: "That just clicked - I realized that X's voice isn't actually truth"
+Claude: "That sounds like an important breakthrough! Would you like me to save this realization to your memory system for future reference?"
+```
+
+#### Strategy Effectiveness
+```
+You: "That boundary technique really worked with N"
+Claude: "I'm glad that approach was effective! Let me capture this successful strategy in your memory."
+```
+
+#### Crisis Detection
+```
+You: "I'm in complete panic and everything feels overwhelming"
+Claude: [Immediately surfaces crisis anchors without being asked]
+- "You have survived difficult moments before and can do so again"
+- "Critical thoughts are not facts - they are old patterns that can change"
+- "Professional support is available and effective"
+```
+
+### Memory Integration Modes
+
+#### Surface Mode (Default)
+- Shows 3-5 most relevant insights
+- Recent breakthroughs and high-effectiveness strategies
+- Crisis anchors when needed
+
+#### Deeper Context (On Request)
+```
+You: "Can you give me more context about my trust journey?"
+Claude: [Provides mid-layer insights with supporting background]
+```
+
+#### Historical Patterns (On Request)
+```
+You: "Show me the full history of my insights about trauma responses"
+Claude: [Provides deep-layer comprehensive view]
+```
+
+### Example Conversation Flow
+
+```
+You: "I'm having trouble with N about hygiene again. The usual approaches aren't working."
+
+Claude: I can see this is an ongoing challenge. From your previous insights:
+
+**Current Strategies:**
+• Boundaries with N are love, not cruelty - hold the line with love instead of fear
+• Structure provides security even when there's initial resistance
+• Consistent routines work better than battles
+
+**What's different this time?** The fact that usual approaches aren't working might mean N is going through a developmental shift. Would you like me to help brainstorm modifications to your existing strategies, or search for any insights you might have about handling resistance to established routines?
+
+You: "That's helpful. Can you check if I have any insights about what to do when established routines stop working?"
+
+Claude: [Uses query_memory tool] I found a few relevant insights:
+
+• "When old strategies stop working, it's often a sign of growth, not failure"
+• "Sometimes resistance means the child is ready for more autonomy in the routine"
+• "Taking a step back and involving N in problem-solving can rebuild cooperation"
+
+Would you like to try involving N in redesigning the hygiene routine?
+```
+
 ## 🔧 Configuration Options
 
 ### Memory System Configuration
