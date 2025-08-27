@@ -13,7 +13,7 @@ from typing import List, Dict, Optional
 class MemoryClient:
     """Client for interacting with memory API"""
     
-    def __init__(self, api_url: str = "http://127.0.0.1:5000"):
+    def __init__(self, api_url: str = "http://127.0.0.1:5001"):
         self.api_url = api_url
         
     def is_server_running(self) -> bool:
