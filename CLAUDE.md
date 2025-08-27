@@ -59,6 +59,10 @@ result = client.query_memory("I'm worried about trusting A")
 
 Personal insights are stored separately in `~/Documents/private/memory_data/personal_insights.db` - this is NOT part of the repository and remains private.
 
+## Repository Location
+
+This code is maintained in `/Users/beck/Documents/private/memory/` - keeping the memory system close to your personal data while maintaining privacy.
+
 ## Commands
 
 - Test: `python3 claude_memory_client.py`
