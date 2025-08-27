@@ -139,13 +139,13 @@ The system automatically surfaces relevant insights when you mention:
 
 **People/Entities:**
 ```
-You: "I'm worried about trusting A"
-Claude: [Automatically retrieves insights about A and trust]
+You: "I'm worried about trusting my partner"
+Claude: [Automatically retrieves insights about trust and relationships]
 ```
 
 **Themes:**
 ```
-You: "N is being difficult about boundaries again"
+You: "Having boundary issues with my child again"
 Claude: [Surfaces boundary strategies and parenting insights]
 ```
 
@@ -160,15 +160,15 @@ Claude: [Immediately provides crisis anchors and grounding insights]
 When memory triggers activate, Claude will naturally integrate insights into the conversation:
 
 ```
-You: "I'm second-guessing whether A is trustworthy"
+You: "I'm second-guessing whether my partner is trustworthy"
 
 Claude: I understand that uncertainty can be challenging. Based on your previous insights, there are some important anchors to remember:
 
-• A is trustworthy - his word is enough (bedrock truth from your experience)
-• Taking trauma responses to therapy helps protect your relationship with A
-• Trust is built through consistent actions over time, and A has demonstrated this
+• Trust builds through consistent actions over time
+• Past relationship patterns can create doubt even in healthy relationships
+• Taking concerns to therapy helps process relationship fears without damaging the partnership
 
-These insights from your journey suggest that the second-guessing might be more about processing trauma patterns than about A's actual trustworthiness. What specifically is triggering these doubts today?
+These insights from your experience suggest that the second-guessing might be more about processing old patterns than about your partner's actual trustworthiness. What specifically is triggering these doubts today?
 ```
 
 ### Using MCP Tools Directly
@@ -199,13 +199,13 @@ The system automatically watches for:
 
 #### Breakthrough Language
 ```
-You: "That just clicked - I realized that X's voice isn't actually truth"
+You: "That just clicked - I realized that critical voice isn't actually truth"
 Claude: "That sounds like an important breakthrough! Would you like me to save this realization to your memory system for future reference?"
 ```
 
 #### Strategy Effectiveness
 ```
-You: "That boundary technique really worked with N"
+You: "That boundary technique really worked with my child"
 Claude: "I'm glad that approach was effective! Let me capture this successful strategy in your memory."
 ```
 
@@ -240,16 +240,16 @@ Claude: [Provides deep-layer comprehensive view]
 ### Example Conversation Flow
 
 ```
-You: "I'm having trouble with N about hygiene again. The usual approaches aren't working."
+You: "I'm having trouble with my child about bedtime routines again. The usual approaches aren't working."
 
 Claude: I can see this is an ongoing challenge. From your previous insights:
 
 **Current Strategies:**
-• Boundaries with N are love, not cruelty - hold the line with love instead of fear
-• Structure provides security even when there's initial resistance
-• Consistent routines work better than battles
+• Boundaries are love, not punishment - hold the line with compassion
+• Structure provides security even when there's initial resistance  
+• Consistent routines work better than power struggles
 
-**What's different this time?** The fact that usual approaches aren't working might mean N is going through a developmental shift. Would you like me to help brainstorm modifications to your existing strategies, or search for any insights you might have about handling resistance to established routines?
+**What's different this time?** The fact that usual approaches aren't working might mean your child is going through a developmental shift. Would you like me to help brainstorm modifications to your existing strategies, or search for any insights you might have about handling resistance to established routines?
 
 You: "That's helpful. Can you check if I have any insights about what to do when established routines stop working?"
 
@@ -257,9 +257,9 @@ Claude: [Uses query_memory tool] I found a few relevant insights:
 
 • "When old strategies stop working, it's often a sign of growth, not failure"
 • "Sometimes resistance means the child is ready for more autonomy in the routine"
-• "Taking a step back and involving N in problem-solving can rebuild cooperation"
+• "Taking a step back and involving children in problem-solving can rebuild cooperation"
 
-Would you like to try involving N in redesigning the hygiene routine?
+Would you like to try involving your child in redesigning the bedtime routine?
 ```
 
 ## 🔧 Configuration Options
@@ -271,14 +271,14 @@ Edit `insight_system_simple.py` to customize:
 #### Entity Triggers
 ```python
 triggers = {
-    "A": SemanticTrigger(
-        entity="A",
-        keywords={"trust", "relationship", "trustworthy", "his word"},
+    "partner": SemanticTrigger(
+        entity="partner",
+        keywords={"trust", "relationship", "communication", "support"},
         max_surface_insights=3
     ),
-    "N": SemanticTrigger(
-        entity="N", 
-        keywords={"boundaries", "parenting", "school", "hygiene"},
+    "child": SemanticTrigger(
+        entity="child", 
+        keywords={"boundaries", "parenting", "school", "routines"},
         max_surface_insights=2
     )
 }
