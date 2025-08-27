@@ -4,14 +4,20 @@ This project includes a personal memory system that can be integrated with Claud
 
 ## Quick Start
 
-1. **Start the memory server:**
+1. **Setup (first time only):**
    ```bash
-   python3 memory_api.py
+   python3 setup_env.py
+   ```
+
+2. **Start the memory server:**
+   ```bash
+   ./start_server.sh
    ```
    The server runs on `http://127.0.0.1:5000`
 
-2. **Test the connection:**
+3. **Test the connection (in another terminal):**
    ```bash
+   source memory_env/bin/activate
    python3 claude_memory_client.py
    ```
 
