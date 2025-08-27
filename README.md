@@ -131,7 +131,9 @@ This starts:
 
 ### Automatic Insight Retrieval
 
-Once set up, the memory system works automatically in your Claude conversations. No special commands needed!
+Once the memory system is **running** (after starting `./start_interactive_memory.sh`), it works automatically in your Claude conversations. No special commands needed in your conversations - just start the system first!
+
+> **⚠️ Remember**: You must run `./start_interactive_memory.sh` each time you want to use the memory system. It doesn't start automatically with your computer.
 
 #### Triggering Memory Retrieval
 
