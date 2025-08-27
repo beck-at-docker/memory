@@ -30,7 +30,7 @@ This project includes a personal memory system that can be integrated with Claud
 
 2. **Start the memory server:**
    ```bash
-   ./start_server.sh
+   ./start_interactive_memory.sh
    ```
 
 3. **Test manually:**
@@ -85,12 +85,16 @@ result = client.query_memory("I'm worried about trusting A")
 # Returns relevant insights about trust and A
 ```
 
-## Files
+## Core Files
 
 - `memory_api.py` - HTTP API server
 - `claude_memory_client.py` - Client library and conversation parser
 - `insight_system_simple.py` - Core memory system (no ML dependencies)
-- `interactive_demo.py` - Standalone interactive demo
+- `memory_mcp_server_simple.py` - MCP server for Claude integration
+- `setup_env.py` - Environment setup script
+- `setup_claude_integration.py` - Claude integration setup
+- `start_interactive_memory.sh` - Start script for memory system
+- `start_mcp_server.sh` - Start script for MCP server
 
 ## Data Storage
 
@@ -102,6 +106,7 @@ This code is maintained in `/Users/beck/Documents/private/memory/` - keeping the
 
 ## Commands
 
-- Test: `python3 claude_memory_client.py`
+- Test system: `python3 test_system.py`
 - Start API: `python3 memory_api.py`
-- Interactive Demo: `python3 interactive_demo.py` (run outside Claude Code)
+- Start interactive system: `./start_interactive_memory.sh`
+- Start MCP server: `./start_mcp_server.sh`

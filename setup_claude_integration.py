@@ -31,7 +31,7 @@ def setup_mcp_server():
         "mcpServers": {
             "memory-system": {
                 "command": "python3",
-                "args": [str(Path.cwd() / "memory_mcp_server.py")],
+                "args": [str(Path.cwd() / "memory_mcp_server_simple.py")],
                 "env": {
                     "PYTHONPATH": str(Path.cwd()),
                     "PATH": f"{Path.cwd() / 'memory_env' / 'bin'}:{os.environ.get('PATH', '')}"

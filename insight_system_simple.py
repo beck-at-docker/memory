@@ -88,12 +88,38 @@ class SimpleContextualInsightRetrieval:
             ),
             "N": SemanticTrigger(
                 entity="N", 
-                keywords={"boundaries", "parenting", "school", "hygiene", "anger"},
+                keywords={"boundaries", "parenting", "school", "hygiene", "anger", "yells", "swears", 
+                          "fights", "silence", "protective silence", "loyalty"},
                 max_surface_insights=3
             ),
             "X": SemanticTrigger(
                 entity="X",
-                keywords={"voice", "trauma", "inadequacy", "scanning"},
+                keywords={"voice", "trauma", "inadequacy", "scanning", "contact", "charming", "reasonable", 
+                          "best behavior", "performance", "good dad", "case", "absent parent"},
+                max_surface_insights=3
+            ),
+            "beck": SemanticTrigger(
+                entity="beck",
+                keywords={"strategic sacrifice", "court avoidance", "moral certainty", "strength", 
+                          "doing the right thing", "protective parenting", "trauma responses", "triggered"},
+                max_surface_insights=3
+            ),
+            "internal_voice": SemanticTrigger(
+                entity="internal_voice",
+                keywords={"internal voice", "sabotage", "reality inversion", "hurting", "loving parent", 
+                          "boundaries", "weaponization", "love"},
+                max_surface_insights=2
+            ),
+            "parenting": SemanticTrigger(
+                entity="parenting",
+                keywords={"parenting", "boundaries", "love through boundaries", "safety", "structure", 
+                          "moral certainty", "holding the line", "parenting strength"},
+                max_surface_insights=3
+            ),
+            "trauma": SemanticTrigger(
+                entity="trauma",
+                keywords={"trauma", "trauma responses", "triggered", "nervous system", "danger", 
+                          "disproportionate responses"},
                 max_surface_insights=2
             )
         }
