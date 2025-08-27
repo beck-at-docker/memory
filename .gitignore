@@ -1,0 +1,6 @@
+# Ignore database files and cache
+*.db
+__pycache__/
+*.pyc
+.DS_Store
+enable-claude.sh
