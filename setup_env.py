@@ -25,8 +25,8 @@ def setup_environment():
     if not run_command("python3 -m venv memory_env", "Creating virtual environment"):
         return False
     
-    # Install requirements
-    if not run_command("memory_env/bin/pip install -r requirements.txt", "Installing requirements"):
+    # Install requirements (use simple version to avoid scikit-learn compilation issues)
+    if not run_command("memory_env/bin/pip install -r requirements_simple.txt", "Installing requirements"):
         return False
     
     # Create activation script
