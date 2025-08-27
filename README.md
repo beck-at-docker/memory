@@ -52,43 +52,47 @@ for insight in insights["surface"]:
 
 ### 3. Example Outputs
 
-**Input**: "I'm worried about trusting A"
+**Input**: "I'm worried about trusting someone"
 ```
-[ANCHOR] A is trustworthy. His word is enough. This is bedrock truth.
-[STRATEGY] Taking trauma responses to therapy protects relationship with A
-```
-
-**Input**: "N is being difficult about boundaries"  
-```
-[STRATEGY] Boundaries with N are love, not cruelty. Hold the line with love instead of fear.
+[ANCHOR] Trust is built through consistent actions over time
+[STRATEGY] Taking concerns to therapy helps process relationship fears
 ```
 
-**Input**: "I'm hearing X's voice again"
+**Input**: "Child is being difficult about boundaries"  
 ```
-[ANCHOR] X's voice creates inadequacy-scanning. Recognize it as X, not truth.
+[STRATEGY] Boundaries are love, not punishment. Hold the line with compassion
+[OBSERVATION] Structure provides security even when there's initial resistance
+```
+
+**Input**: "I'm hearing that critical voice again"
+```
+[ANCHOR] Critical inner voice reflects past patterns, not current truth
+[STRATEGY] Recognition is the first step in changing automatic responses
 ```
 
 ## 🎭 Entity-Specific Triggers
 
-### A (Trust & Relationship)
-- **Triggers**: "trust", "A", "relationship", "his word"
-- **Surfaces**: Trust anchors, relationship strategies, breakthrough moments
-- **Crisis Anchor**: "A is trustworthy. His word is enough."
+The system tracks specific entities (people, concepts) and responds to contextual mentions:
 
-### N (Parenting & Boundaries)  
-- **Triggers**: "N", "boundaries", "parenting", "school", "hygiene"
+### Trust & Relationships
+- **Triggers**: "trust", relationship names, "faith", "connection"
+- **Surfaces**: Trust-building strategies, relationship insights, breakthrough moments
+- **Focus**: Building and maintaining healthy connections
+
+### Parenting & Boundaries  
+- **Triggers**: child names, "boundaries", "parenting", "school", "discipline"
 - **Surfaces**: Boundary strategies, effective parenting approaches
-- **Key Strategy**: "Hold the line with love instead of fear"
+- **Focus**: Loving structure and healthy limits
 
-### X (Trauma & Recovery)
-- **Triggers**: "X", "voice", "trauma", "inadequacy", "scanning"
-- **Surfaces**: Recognition strategies, healing approaches
-- **Core Insight**: "X's voice creates inadequacy-scanning. Recognize it as X, not truth."
+### Trauma & Recovery
+- **Triggers**: "trauma", "voice", specific trigger words, "inadequacy"
+- **Surfaces**: Recognition strategies, healing approaches, grounding techniques
+- **Focus**: Identifying patterns and building resilience
 
-### Trauma Responses
+### System Responses
 - **Triggers**: "activation", "triggered", "nervous system", "shutdown"
 - **Surfaces**: Regulation strategies, therapeutic approaches
-- **Strategy**: "Taking trauma responses to therapy protects relationship with A"
+- **Focus**: Self-care and protective strategies
 
 ## 📊 Layered Information Architecture
 
@@ -124,17 +128,17 @@ for insight in insights["surface"]:
 
 ### Bedrock Truths (Timeless)
 - Maintain relevance regardless of age
-- "A is trustworthy. His word is enough."
-- "X's voice creates inadequacy-scanning"
-- Core therapeutic insights
+- Core patterns that remain consistently true
+- Fundamental insights about healing and growth
+- Anchor points for stability during difficult moments
 
 ## 🔄 Growth Trajectory Tracking
 
 ### Progression Markers
-- **Early**: "Could I be so lucky?"
-- **Middle**: "Terrifying but possible"  
-- **Recent**: "Yes, his word is enough"
-- **Current**: "We are finding our own way together"
+- **Early**: Initial hope and cautious optimism
+- **Middle**: Working through fear and building trust  
+- **Recent**: Confident in positive outcomes
+- **Current**: Actively creating healthy patterns together
 
 ### Insight Evolution
 - **Foundational**: Core patterns that remain true
@@ -158,9 +162,9 @@ Immediately surfaces:
 ### Example Crisis Output
 ```
 [CRISIS ANCHORS - Hold onto these:]
-• A is trustworthy. His word is enough. This is bedrock truth.
-• X's voice creates inadequacy-scanning. Recognize it as X, not truth.  
-• Taking trauma responses to therapy protects relationship with A
+• You have survived difficult moments before and can do so again
+• Critical thoughts are not facts - they are old patterns that can change
+• Professional support is available and effective for processing trauma
 ```
 
 ## 📈 Strategy Effectiveness Tracking
