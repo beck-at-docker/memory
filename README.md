@@ -29,9 +29,35 @@ python3 setup_claude_integration.py
 
 ### 3. Configure Claude Code
 
-Follow the instructions from the setup script to:
-- Enable MCP server: `memory-system`
-- Add hooks configuration for automatic monitoring
+#### Enable MCP Server
+
+1. Open Claude Code settings (Cmd/Ctrl + ,)
+2. Go to "MCP Servers" section
+3. Add a new server:
+   - **Name**: `memory-system`
+   - **Command**: `python3`
+   - **Args**: `/path/to/memory/memory_mcp_server_simple.py` (use your actual path)
+   - **Environment Variables**:
+     - `PYTHONPATH`: `/path/to/memory` (use your actual path)
+     - `PATH`: `/path/to/memory/memory_env/bin:$PATH`
+
+4. Click "Save" and restart Claude Code
+
+#### Enable Hooks (Optional but Recommended)
+
+1. In Claude Code settings, go to "Hooks" section
+2. Add these hooks:
+   - **user-prompt-submit**: `python3 /path/to/memory/claude_hooks/user_prompt_submit.py "$PROMPT"`
+   - **post-response**: `python3 /path/to/memory/claude_hooks/post_response.py`
+
+3. Replace `/path/to/memory` with your actual installation path
+4. Click "Save" and restart Claude Code
+
+#### Verify Configuration
+
+After restarting Claude Code, you should see:
+- MCP server "memory-system" listed as "Connected" in the MCP Servers section
+- In any Claude conversation, you can test by asking: "Can you check my memory system status?"
 
 ## How to Use
 
