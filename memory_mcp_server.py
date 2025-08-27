@@ -292,7 +292,7 @@ class MemoryMCPServer:
 - Status: {status.get('status', 'Unknown')}
 - Version: {status.get('version', 'Unknown')}
 
-🔗 **Server:** Running on http://127.0.0.1:5000"""
+🔗 **Server:** Running on http://127.0.0.1:5001"""
         
         return CallToolResult(
             content=[TextContent(type="text", text=formatted_status)]
