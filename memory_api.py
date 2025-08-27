@@ -18,12 +18,19 @@ app = Flask(__name__)
 memory_system = None
 
 def init_memory_system():
-    """Initialize the memory system with demo data"""
+    """Initialize the memory system"""
     global memory_system
-    memory_system = SimpleContextualInsightRetrieval("claude_project.db")
     
-    # Check if we need to setup demo data
-    if not os.path.exists("claude_project.db") or os.path.getsize("claude_project.db") < 1000:
+    # Store data in separate data directory
+    data_dir = os.path.expanduser("~/Documents/private/memory_data")
+    os.makedirs(data_dir, exist_ok=True)
+    
+    db_path = os.path.join(data_dir, "personal_insights.db")
+    memory_system = SimpleContextualInsightRetrieval(db_path)
+    
+    # Only add demo data if database is completely empty
+    if not os.path.exists(db_path) or os.path.getsize(db_path) < 1000:
+        print(f"Setting up new memory database at: {db_path}")
         setup_demo_data()
 
 def setup_demo_data():

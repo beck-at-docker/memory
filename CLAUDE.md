@@ -54,7 +54,10 @@ result = client.query_memory("I'm worried about trusting A")
 - `claude_memory_client.py` - Client library and conversation parser
 - `insight_system_simple.py` - Core memory system (no ML dependencies)
 - `interactive_demo.py` - Standalone interactive demo
-- `claude_project.db` - SQLite database for insights
+
+## Data Storage
+
+Personal insights are stored separately in `~/Documents/private/memory_data/personal_insights.db` - this is NOT part of the repository and remains private.
 
 ## Commands
 
