@@ -29,35 +29,68 @@ python3 setup_claude_integration.py
 
 ### 3. Configure Claude Code
 
-#### Enable MCP Server
+#### Edit Claude Code Configuration File
 
-1. Open Claude Code settings (Cmd/Ctrl + ,)
-2. Go to "MCP Servers" section
-3. Add a new server:
-   - **Name**: `memory-system`
-   - **Command**: `python3`
-   - **Args**: `/path/to/memory/memory_mcp_server_simple.py` (use your actual path)
-   - **Environment Variables**:
-     - `PYTHONPATH`: `/path/to/memory` (use your actual path)
-     - `PATH`: `/path/to/memory/memory_env/bin:$PATH`
+Add the following sections to your Claude Code configuration file:
 
-4. Click "Save" and restart Claude Code
+**Config file locations:**
+- **macOS**: `~/.config/claude-code/settings.json`
+- **Linux**: `~/.config/claude-code/settings.json`
+- **Windows**: `%APPDATA%/claude-code/settings.json`
 
-#### Enable Hooks (Optional but Recommended)
+**Add MCP Server:**
+```json
+{
+  "mcpServers": {
+    "memory-system": {
+      "command": "python3",
+      "args": ["/path/to/memory/memory_mcp_server_simple.py"],
+      "env": {
+        "PYTHONPATH": "/path/to/memory",
+        "PATH": "/path/to/memory/memory_env/bin:/usr/local/bin:/usr/bin:/bin"
+      }
+    }
+  }
+}
+```
 
-1. In Claude Code settings, go to "Hooks" section
-2. Add these hooks:
-   - **user-prompt-submit**: `python3 /path/to/memory/claude_hooks/user_prompt_submit.py "$PROMPT"`
-   - **post-response**: `python3 /path/to/memory/claude_hooks/post_response.py`
+**Add Hooks (Optional but Recommended):**
+```json
+{
+  "hooks": {
+    "user-prompt-submit": "python3 /path/to/memory/claude_hooks/user_prompt_submit.py \"$PROMPT\"",
+    "post-response": "python3 /path/to/memory/claude_hooks/post_response.py"
+  }
+}
+```
 
-3. Replace `/path/to/memory` with your actual installation path
-4. Click "Save" and restart Claude Code
+**Complete Example Configuration:**
+```json
+{
+  "mcpServers": {
+    "memory-system": {
+      "command": "python3", 
+      "args": ["/Users/yourname/memory/memory_mcp_server_simple.py"],
+      "env": {
+        "PYTHONPATH": "/Users/yourname/memory",
+        "PATH": "/Users/yourname/memory/memory_env/bin:/usr/local/bin:/usr/bin:/bin"
+      }
+    }
+  },
+  "hooks": {
+    "user-prompt-submit": "python3 /Users/yourname/memory/claude_hooks/user_prompt_submit.py \"$PROMPT\"",
+    "post-response": "python3 /Users/yourname/memory/claude_hooks/post_response.py"
+  }
+}
+```
 
-#### Verify Configuration
+**Important:** Replace `/path/to/memory` or `/Users/yourname/memory` with your actual installation path.
 
-After restarting Claude Code, you should see:
-- MCP server "memory-system" listed as "Connected" in the MCP Servers section
-- In any Claude conversation, you can test by asking: "Can you check my memory system status?"
+#### Restart and Verify
+
+1. Save the configuration file
+2. Restart Claude Code
+3. Test by asking Claude: "Can you check my memory system status?"
 
 ## How to Use
 
