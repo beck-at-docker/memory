@@ -11,15 +11,38 @@ import uuid
 import json
 import threading
 import os
+import hashlib
 
 app = Flask(__name__)
 
 # Global memory system instance
 memory_system = None
 
+def verify_access_token():
+    """Verify that requests come from authorized sources"""
+    # Expected token: hash of the memory project directory path
+    allowed_project = os.path.expanduser("~/Documents/private/memory")
+    expected_token = hashlib.sha256(allowed_project.encode()).hexdigest()[:16]
+    
+    # Check for token in headers
+    provided_token = request.headers.get('X-Memory-Token')
+    
+    if not provided_token or provided_token != expected_token:
+        return False
+    return True
+
 def init_memory_system():
     """Initialize the memory system"""
     global memory_system
+    
+    # Check if running from allowed project directory
+    allowed_project = os.path.expanduser("~/Documents/private/memory")
+    current_dir = os.getcwd()
+    
+    if not current_dir.startswith(allowed_project):
+        print(f"Memory system access denied from: {current_dir}")
+        print(f"Must run from: {allowed_project}")
+        return None
     
     # Store data in separate data directory
     data_dir = os.path.expanduser("~/Documents/private/memory_data")
@@ -92,6 +115,9 @@ def setup_demo_data():
 @app.route('/query', methods=['POST'])
 def query_insights():
     """Query insights based on input text"""
+    if not verify_access_token():
+        return jsonify({"error": "Unauthorized access"}), 401
+        
     data = request.json
     user_input = data.get('input', '')
     max_results = data.get('max_results', 3)
@@ -122,6 +148,9 @@ def query_insights():
 @app.route('/add', methods=['POST'])
 def add_insight():
     """Add new insight"""
+    if not verify_access_token():
+        return jsonify({"error": "Unauthorized access"}), 401
+        
     data = request.json
     
     insight = Insight(

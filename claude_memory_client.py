@@ -7,6 +7,8 @@ Tools for Claude to interact with the memory system
 import requests
 import json
 import re
+import os
+import hashlib
 from datetime import datetime
 from typing import List, Dict, Optional
 
@@ -15,6 +17,17 @@ class MemoryClient:
     
     def __init__(self, api_url: str = "http://127.0.0.1:5001"):
         self.api_url = api_url
+        
+        # Check if running from allowed project directory
+        allowed_project = os.path.expanduser("~/Documents/private/memory")
+        current_dir = os.getcwd()
+        
+        if not current_dir.startswith(allowed_project):
+            raise PermissionError(f"Memory client access denied from: {current_dir}. Must run from: {allowed_project}")
+        
+        # Generate token based on memory project directory
+        self.access_token = hashlib.sha256(allowed_project.encode()).hexdigest()[:16]
+        self.headers = {"X-Memory-Token": self.access_token}
         
     def is_server_running(self) -> bool:
         """Check if memory server is running"""
@@ -29,6 +42,7 @@ class MemoryClient:
         try:
             response = requests.post(f"{self.api_url}/query", 
                                    json={"input": user_input, "max_results": max_results},
+                                   headers=self.headers,
                                    timeout=5)
             
             if response.status_code == 200:
@@ -52,6 +66,7 @@ class MemoryClient:
                                        "effectiveness_score": effectiveness_score,
                                        "context": f"Added by Claude at {datetime.now().isoformat()}"
                                    },
+                                   headers=self.headers,
                                    timeout=5)
             
             if response.status_code == 200:
