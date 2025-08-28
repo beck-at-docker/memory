@@ -22,10 +22,10 @@ app = Flask(__name__)
 
 # Setup rate limiting
 limiter = Limiter(
-    app,
     key_func=get_remote_address,
     default_limits=[f"{Config.RATE_LIMIT_PER_MINUTE} per minute"]
 )
+limiter.init_app(app)
 
 # Setup logging
 logger = get_logger('memory_api')
