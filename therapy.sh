@@ -3,8 +3,14 @@
 start_therapy() {
     echo "Starting complete memory system..."
 
-    # Start memory system in background
+    # Setup environment if needed
     cd /Users/beck/Documents/private/memory
+    if [ ! -d "memory_env" ]; then
+        echo "Setting up Python environment..."
+        python3 setup_env.py
+    fi
+
+    # Start memory system in background
     ./start_interactive_memory.sh &
 
     # Wait for memory system to start
