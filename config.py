@@ -20,7 +20,7 @@ class Config:
     
     # Security settings
     TOKEN_ALGORITHM = os.getenv('TOKEN_ALGORITHM', 'HS256')
-    SECRET_KEY = os.getenv('SECRET_KEY', secrets.token_urlsafe(32))
+    SECRET_KEY = os.getenv('SECRET_KEY', 'memory_system_secret_key_for_local_development_only')
     
     # Rate limiting
     RATE_LIMIT_PER_MINUTE = int(os.getenv('RATE_LIMIT_PER_MINUTE', '60'))
