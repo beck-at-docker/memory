@@ -39,53 +39,84 @@ class MemoryClient:
     
     def query_memory(self, user_input: str, max_results: int = 3) -> Dict:
         """Query memory for relevant insights"""
+        if not user_input.strip():
+            self.logger.warning("Empty input provided to query_memory")
+            return {"error": "Empty input"}
+        
         try:
-            response = requests.post(f"{self.api_url}/query", 
-                                   json={"input": user_input, "max_results": max_results},
-                                   headers=self.headers,
-                                   timeout=5)
+            self.logger.debug(f"Querying memory with input: {user_input[:100]}...")
+            
+            response = requests.post(
+                f"{self.api_url}/query", 
+                json={"input": user_input, "max_results": max_results},
+                headers=self.headers,
+                timeout=Config.READ_TIMEOUT
+            )
             
             if response.status_code == 200:
-                return response.json()
+                result = response.json()
+                self.logger.info(f"Query returned {len(result.get('insights', []))} insights")
+                return result
             else:
-                return {"error": f"API error: {response.status_code}"}
+                error_msg = f"API error: {response.status_code}"
+                self.logger.error(error_msg)
+                return {"error": error_msg}
                 
         except requests.exceptions.RequestException as e:
+            self.logger.error(f"Connection error: {str(e)}")
             return {"error": f"Connection error: {str(e)}"}
     
     def add_insight(self, content: str, entities: List[str], themes: List[str], 
                    insight_type: str = "observation", effectiveness_score: float = 0.5) -> Dict:
         """Add new insight to memory"""
+        if not content.strip():
+            self.logger.warning("Empty content provided to add_insight")
+            return {"error": "Empty content"}
+        
         try:
-            response = requests.post(f"{self.api_url}/add", 
-                                   json={
-                                       "content": content,
-                                       "entities": entities,
-                                       "themes": themes,
-                                       "insight_type": insight_type,
-                                       "effectiveness_score": effectiveness_score,
-                                       "context": f"Added by Claude at {datetime.now().isoformat()}"
-                                   },
-                                   headers=self.headers,
-                                   timeout=5)
+            self.logger.debug(f"Adding insight: {content[:100]}...")
+            
+            response = requests.post(
+                f"{self.api_url}/add", 
+                json={
+                    "content": content,
+                    "entities": entities,
+                    "themes": themes,
+                    "insight_type": insight_type,
+                    "effectiveness_score": effectiveness_score,
+                    "context": f"Added by Claude at {datetime.now().isoformat()}"
+                },
+                headers=self.headers,
+                timeout=Config.READ_TIMEOUT
+            )
             
             if response.status_code == 200:
-                return response.json()
+                result = response.json()
+                self.logger.info(f"Successfully added insight: {result.get('insight_id')}")
+                return result
             else:
-                return {"error": f"API error: {response.status_code}"}
+                error_msg = f"API error: {response.status_code}"
+                self.logger.error(error_msg)
+                return {"error": error_msg}
                 
         except requests.exceptions.RequestException as e:
+            self.logger.error(f"Connection error: {str(e)}")
             return {"error": f"Connection error: {str(e)}"}
     
     def get_status(self) -> Dict:
         """Get memory system status"""
         try:
-            response = requests.get(f"{self.api_url}/status", timeout=5)
+            response = requests.get(f"{self.api_url}/status", timeout=Config.CONNECTION_TIMEOUT)
             if response.status_code == 200:
-                return response.json()
+                result = response.json()
+                self.logger.debug(f"Memory system status: {result.get('status')}")
+                return result
             else:
-                return {"error": f"API error: {response.status_code}"}
-        except:
+                error_msg = f"API error: {response.status_code}"
+                self.logger.error(error_msg)
+                return {"error": error_msg}
+        except Exception as e:
+            self.logger.error(f"Cannot connect to memory server: {e}")
             return {"error": "Cannot connect to memory server"}
 
 def extract_insights_from_conversation(conversation_text: str) -> List[Dict]:
