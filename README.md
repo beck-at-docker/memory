@@ -114,20 +114,20 @@ The system surfaces relevant insights when you mention:
 
 **People or Relationships:**
 ```
-You: "I'm worried about trusting my partner"
+You: "I'm having trust issues in my relationship"
 Claude: [Automatically retrieves insights about trust and relationships]
 ```
 
 **Themes or Topics:**
 ```
-You: "Having boundary issues with my child again"
-Claude: [Surfaces boundary strategies and parenting insights]
+You: "I'm struggling with setting boundaries at work"
+Claude: [Surfaces boundary strategies and workplace insights]
 ```
 
 **Crisis Language:**
 ```
-You: "I'm falling apart and can't handle this"
-Claude: [Immediately provides crisis anchors and grounding insights]
+You: "I'm overwhelmed and don't know how to handle this situation"
+Claude: [Immediately provides coping strategies and grounding insights]
 ```
 
 #### What You'll See
@@ -135,15 +135,15 @@ Claude: [Immediately provides crisis anchors and grounding insights]
 When memory triggers activate, Claude naturally integrates insights:
 
 ```
-You: "I'm second-guessing whether my partner is trustworthy"
+You: "I'm having doubts about whether I can trust someone new in my life"
 
 Claude: I understand that uncertainty can be challenging. Based on your previous insights, there are some important anchors to remember:
 
 - Trust builds through consistent actions over time
-- Past relationship patterns can create doubt even in healthy relationships
-- Taking concerns to therapy helps process relationship fears without damaging the partnership
+- Past experiences can create doubt even in potentially healthy relationships
+- Processing concerns with support helps navigate trust-building without self-sabotage
 
-These insights from your experience suggest that the second-guessing might be more about processing old patterns than about your partner's actual trustworthiness. What specifically is triggering these doubts today?
+These insights from your experience suggest that the doubts might be more about protective patterns than about the person's actual trustworthiness. What specifically is triggering these concerns?
 ```
 
 ### Using Memory Tools
@@ -152,7 +152,7 @@ Claude can access memory tools when you ask:
 
 **Search Memory:**
 ```
-You: "Can you search my memory for insights about parenting strategies?"
+You: "Can you search my memory for insights about communication strategies?"
 Claude: [Uses query_memory tool to search and return relevant insights]
 ```
 
@@ -164,7 +164,7 @@ Claude: [Uses add_insight tool to capture the new understanding]
 
 **Check Statistics:**
 ```
-You: "How many insights do I have stored about trust?"
+You: "How many insights do I have stored about relationships?"
 Claude: [Uses get_memory_status tool to provide statistics]
 ```
 
@@ -174,48 +174,48 @@ With hooks enabled, the system automatically watches for:
 
 **Breakthrough Language:**
 ```
-You: "That just clicked - I realized that critical voice isn't actually truth"
+You: "That just clicked - I realized that negative self-talk isn't actually truth"
 Claude: "That sounds like an important breakthrough! Would you like me to save this realization to your memory system for future reference?"
 ```
 
 **Strategy Success:**
 ```
-You: "That boundary technique really worked with my child"
+You: "That communication technique really worked in my meeting today"
 Claude: "I'm glad that approach was effective! Let me capture this successful strategy in your memory."
 ```
 
 **Crisis Detection:**
 ```
-You: "I'm in complete panic and everything feels overwhelming"
-Claude: [Immediately surfaces crisis anchors without being asked]
-- "You have survived difficult moments before and can do so again"
-- "Critical thoughts are not facts - they are old patterns that can change"
-- "Professional support is available and effective"
+You: "I'm feeling completely overwhelmed and don't know what to do"
+Claude: [Immediately surfaces coping strategies without being asked]
+- "You have navigated difficult situations before and can do so again"
+- "Overwhelming thoughts are temporary - they will pass"
+- "Support systems are available when you need them"
 ```
 
 ## Example Conversation
 
 ```
-You: "I'm having trouble with my child about bedtime routines again. The usual approaches aren't working."
+You: "I'm having trouble with communication in my team meetings. The usual approaches aren't working."
 
 Claude: I can see this is an ongoing challenge. From your previous insights:
 
 **Current Strategies:**
-- Boundaries are love, not punishment - hold the line with compassion
-- Structure provides security even when there's initial resistance  
-- Consistent routines work better than power struggles
+- Clear expectations reduce confusion and conflict
+- Active listening builds trust even during disagreements
+- Regular check-ins prevent small issues from becoming big problems
 
-**What's different this time?** The fact that usual approaches aren't working might mean your child is going through a developmental shift. Would you like me to help brainstorm modifications to your existing strategies, or search for any insights you might have about handling resistance to established routines?
+**What's different this time?** The fact that usual approaches aren't working might mean the team dynamic is shifting. Would you like me to help brainstorm modifications to your existing strategies, or search for any insights you might have about handling resistance to established communication patterns?
 
-You: "That's helpful. Can you check if I have any insights about what to do when established routines stop working?"
+You: "That's helpful. Can you check if I have any insights about what to do when established approaches stop working?"
 
 Claude: [Uses query_memory tool] I found a few relevant insights:
 
 - "When old strategies stop working, it's often a sign of growth, not failure"
-- "Sometimes resistance means the child is ready for more autonomy in the routine"
-- "Taking a step back and involving children in problem-solving can rebuild cooperation"
+- "Sometimes resistance means people are ready for more collaborative decision-making"
+- "Taking a step back and involving the team in problem-solving can rebuild cooperation"
 
-Would you like to try involving your child in redesigning the bedtime routine?
+Would you like to try involving your team in redesigning the meeting structure?
 ```
 
 ## Data Storage
