@@ -18,7 +18,7 @@ start_therapy() {
     sleep 5
 
     # Check if memory system is running
-    if curl -s http://localhost:5001/status > /dev/null; then
+    if curl -s http://localhost:8001/status > /dev/null; then
         echo "Memory system is running"
     else
         echo "Memory system failed to start"
@@ -32,6 +32,16 @@ start_therapy() {
 
 stop_therapy() {
     echo "Stopping memory system..."
+    
+    # Setup environment if needed
+    cd /Users/beck/Documents/private/memory
+    
+    # Always check if dependencies are available
+    echo "Checking dependencies..."
+    if ! (source memory_env/bin/activate 2>/dev/null && python3 -c "import flask_limiter" 2>/dev/null); then
+        echo "Setting up/updating Python environment..."
+        python3 setup_env.py
+    fi
 
     # Stop memory API server
     pkill -f "python3.*memory_api.py" && echo "Stopped memory API server" || echo "Memory API server was not running"
@@ -45,15 +55,53 @@ stop_therapy() {
     echo "Memory system stopped successfully!"
 }
 
+restart_therapy() {
+    echo "Restarting memory system..."
+    
+    # Setup environment if needed
+    cd /Users/beck/Documents/private/memory
+    
+    # Always check if dependencies are available
+    echo "Checking dependencies..."
+    if ! (source memory_env/bin/activate 2>/dev/null && python3 -c "import flask_limiter" 2>/dev/null); then
+        echo "Setting up/updating Python environment..."
+        python3 setup_env.py
+    fi
+    
+    # Stop first
+    stop_therapy
+    
+    # Wait a moment
+    sleep 2
+    
+    # Then start
+    start_therapy
+}
+
 status_therapy() {
     echo "Memory system status..."
+    echo
+
+    # Check environment setup
+    cd /Users/beck/Documents/private/memory
+    if [ -d "memory_env" ]; then
+        echo "[READY] Virtual environment exists"
+        if (source memory_env/bin/activate 2>/dev/null && python3 -c "import flask_limiter" 2>/dev/null); then
+            echo "        Dependencies installed and ready"
+        else
+            echo "        WARNING: Dependencies missing or broken"
+        fi
+    else
+        echo "[MISSING] Virtual environment not found"
+        echo "         Run 'therapy start' to set up"
+    fi
     echo
 
     # Check memory API server
     if pgrep -f "python3.*memory_api.py" > /dev/null; then
         echo "[RUNNING] Memory API server is running"
-        if curl -s http://localhost:5001/status > /dev/null; then
-            echo "          API endpoint responding on port 5001"
+        if curl -s http://localhost:8001/status > /dev/null; then
+            echo "          API endpoint responding on port 8001"
         else
             echo "          WARNING: Process running but API not responding"
         fi
@@ -77,8 +125,8 @@ status_therapy() {
 
     echo
     echo "Quick links:"
-    echo "   Memory API: http://localhost:5001/status"
-    echo "   Test command: curl http://localhost:5001/status"
+    echo "   Memory API: http://localhost:8001/status"
+    echo "   Test command: curl http://localhost:8001/status"
 }
 
 # Main script logic
@@ -86,12 +134,15 @@ if [ "$1" = "start" ]; then
     start_therapy
 elif [ "$1" = "stop" ]; then
     stop_therapy
+elif [ "$1" = "restart" ]; then
+    restart_therapy
 elif [ "$1" = "status" ]; then
     status_therapy
 else
-    echo "Usage: $0 {start|stop|status}"
-    echo "  start  - Start the memory system and Claude Code"
-    echo "  stop   - Stop all memory system processes"
-    echo "  status - Check status of memory system components"
+    echo "Usage: $0 {start|stop|restart|status}"
+    echo "  start   - Start the memory system and Claude Code"
+    echo "  stop    - Stop all memory system processes"
+    echo "  restart - Restart the memory system"
+    echo "  status  - Check status of memory system components"
     exit 1
 fi
