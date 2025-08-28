@@ -123,26 +123,28 @@ memory_status() {
     fi
 }
 
-# Handle command line arguments
-if [ "$1" = "start" ]; then
-    memory_start
-elif [ "$1" = "stop" ]; then
-    memory_stop
-elif [ "$1" = "restart" ]; then
-    memory_restart
-elif [ "$1" = "status" ]; then
-    memory_status
-else
-    echo "Memory System Wrapper - Virtual Environment Management"
-    echo ""
-    echo "Usage: source therapy_wrapper.sh [command]"
-    echo "   OR: memory_start / memory_stop / memory_restart / memory_status"
-    echo ""
-    echo "Commands:"
-    echo "  start   - Start memory system and activate virtual environment"
-    echo "  stop    - Stop memory system and deactivate virtual environment"  
-    echo "  restart - Restart memory system"
-    echo "  status  - Check memory system and environment status"
-    echo ""
-    echo "After sourcing, you can use: memory_start, memory_stop, memory_restart, memory_status"
+# Only handle command line arguments if called directly (not sourced)
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    if [ "$1" = "start" ]; then
+        memory_start
+    elif [ "$1" = "stop" ]; then
+        memory_stop
+    elif [ "$1" = "restart" ]; then
+        memory_restart
+    elif [ "$1" = "status" ]; then
+        memory_status
+    else
+        echo "Memory System Wrapper - Virtual Environment Management"
+        echo ""
+        echo "Usage: source therapy_wrapper.sh [command]"
+        echo "   OR: memory_start / memory_stop / memory_restart / memory_status"
+        echo ""
+        echo "Commands:"
+        echo "  start   - Start memory system and activate virtual environment"
+        echo "  stop    - Stop memory system and deactivate virtual environment"  
+        echo "  restart - Restart memory system"
+        echo "  status  - Check memory system and environment status"
+        echo ""
+        echo "After sourcing, you can use: memory_start, memory_stop, memory_restart, memory_status"
+    fi
 fi
