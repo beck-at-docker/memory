@@ -234,6 +234,35 @@ Claude: [Uses query_memory tool] I found a few relevant insights:
 Would you like to try involving your team in redesigning the meeting structure?
 ```
 
+## Repository Structure
+
+### Core System Files
+- **`insight_system_simple.py`** - Main contextual insight retrieval system with SQLite database
+- **`memory_api.py`** - Flask-based REST API server for memory operations  
+- **`memory_mcp_server_simple.py`** - MCP server for Claude Code integration
+- **`claude_memory_client.py`** - Client for interacting with the memory API
+
+### Setup & Management Scripts
+- **`setup_claude_integration.py`** - Automated setup for Claude Code integration
+- **`setup_env.py`** - Environment configuration
+- **`therapy.sh`** - System management (start/stop/status)
+- **`start_interactive_memory.sh`** - Interactive memory session launcher
+- **`start_mcp_server.sh`** - MCP server startup script
+
+### Hook System
+- **`claude_hooks.py`** - Hook management system
+- **`claude_hooks/user_prompt_submit.py`** - Pre-prompt processing hook  
+- **`claude_hooks/post_response.py`** - Post-response processing hook
+
+### Testing & Configuration
+- **`test_system.py`** - System functionality tests
+- **`test_access_restriction.py`** - Access control testing
+- **`extract_conversation_insights.py`** - Conversation analysis tool
+- **`config.py`** - Configuration management
+- **`logging_config.py`** - Logging setup
+- **`.env.example`** - Environment variable template
+- **`requirements_simple.txt`** - Python dependencies
+
 ## Data Storage
 
 Personal insights are stored in:

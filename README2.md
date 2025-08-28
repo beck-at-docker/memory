@@ -585,16 +585,31 @@ chmod +x claude_hooks/*.py
 
 ```
 memory/
-├── insight_system_simple.py      # Core insight system
-├── memory_api.py                 # HTTP API server
-├── claude_memory_client.py       # Client library
-├── memory_mcp_server_simple.py   # MCP server
-├── claude_hooks.py               # Hook implementations
-├── claude_hooks/                 # Hook scripts
-├── setup_env.py                  # Environment setup
-├── setup_claude_integration.py   # Claude integration
-├── test_system.py               # Test suite
-└── requirements_simple.txt      # Dependencies
+├── insight_system_simple.py         # Core insight system
+├── memory_api.py                    # HTTP API server
+├── claude_memory_client.py          # Client library
+├── memory_mcp_server_simple.py      # MCP server
+├── claude_hooks.py                  # Hook implementations
+├── claude_hooks/                    # Hook scripts directory
+│   ├── user_prompt_submit.py        #   Pre-prompt processing hook
+│   └── post_response.py             #   Post-response processing hook
+├── setup_env.py                     # Environment setup
+├── setup_claude_integration.py      # Claude integration setup
+├── therapy.sh                       # System management script
+├── start_interactive_memory.sh      # Interactive memory launcher
+├── start_mcp_server.sh             # MCP server startup
+├── test_system.py                   # Main test suite
+├── test_access_restriction.py       # Security tests
+├── extract_conversation_insights.py # Conversation analysis
+├── config.py                        # Configuration management
+├── logging_config.py                # Logging configuration
+├── requirements_simple.txt          # Python dependencies
+├── .env.example                     # Environment template
+├── CLAUDE.md                        # Claude Code integration docs
+├── logs/                            # Log files directory
+│   └── claude_memory.log            #   System log file
+├── README.md                        # User documentation
+└── README2.md                       # Technical documentation
 ```
 
 ### Adding New Features
