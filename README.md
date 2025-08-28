@@ -24,6 +24,10 @@ python3 setup_claude_integration.py
 ### 2. Start the System
 
 ```bash
+# Start the memory system
+./therapy.sh start
+
+# Or use the individual script
 ./start_interactive_memory.sh
 ```
 
@@ -94,15 +98,27 @@ Add the following sections to your Claude Code configuration file:
 
 ## How to Use
 
-### Starting the System
+### Managing the System
 
-You must start the memory system before each use:
+The `therapy.sh` script provides unified control over the memory system:
 
+```bash
+# Start the memory system
+./therapy.sh start
+
+# Check if components are running
+./therapy.sh status
+
+# Stop all memory system processes
+./therapy.sh stop
+```
+
+**Alternative**: You can also use the individual script:
 ```bash
 ./start_interactive_memory.sh
 ```
 
-**Important**: The system doesn't start automatically. Run this script each time you want to use memory features.
+**Important**: The system doesn't start automatically. Run the start command each time you want to use memory features.
 
 ### Using with Claude
 
@@ -241,14 +257,16 @@ python3 test_system.py
 ### Memory Server Won't Start
 
 ```bash
-# Check if port 5001 is in use
-lsof -i :5001
+# Check system status
+./therapy.sh status
 
-# Kill existing process  
-pkill -f memory_api.py
+# Stop all processes and restart
+./therapy.sh stop
+./therapy.sh start
 
-# Restart
-./start_interactive_memory.sh
+# Manual troubleshooting
+lsof -i :5001  # Check if port 5001 is in use
+pkill -f memory_api.py  # Kill existing process
 ```
 
 ### MCP Server Not Connecting
@@ -272,7 +290,13 @@ pkill -f memory_api.py
 If you prefer to use the API directly:
 
 ```bash
+# Start the memory system
+./therapy.sh start
+
+# Or start manually
 ./start_interactive_memory.sh
+
+# Use the client
 source memory_env/bin/activate
 python3 claude_memory_client.py
 ```
