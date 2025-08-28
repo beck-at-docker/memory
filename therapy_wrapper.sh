@@ -68,58 +68,28 @@ memory_restart() {
 
 memory_status() {
     cd /Users/beck/Documents/private/memory
-    echo "Memory system status..."
-    echo
-
-    # Check environment setup
-    if [ -d "memory_env" ]; then
-        echo "[READY] Virtual environment exists"
-        if (source memory_env/bin/activate 2>/dev/null && python3 -c "import flask_limiter" 2>/dev/null); then
-            echo "        Dependencies installed and ready"
-        else
-            echo "        WARNING: Dependencies missing or broken"
-        fi
-    else
-        echo "[MISSING] Virtual environment not found"
-        echo "         Run 'therapy start' to set up"
-    fi
-    echo
-
-    # Check memory API server
-    if pgrep -f "python3.*memory_api.py" > /dev/null; then
-        echo "[RUNNING] Memory API server is running"
-        if curl -s http://localhost:8001/status > /dev/null; then
-            echo "          API endpoint responding on port 8001"
-        else
-            echo "          WARNING: Process running but API not responding"
-        fi
-    else
-        echo "[STOPPED] Memory API server is not running"
-    fi
-
-    # Check MCP server
-    if pgrep -f "python3.*memory_mcp_server_simple.py" > /dev/null; then
-        echo "[RUNNING] MCP server is running"
-    else
-        echo "[STOPPED] MCP server is not running"
-    fi
-
-    # Check interactive memory script
-    if pgrep -f "start_interactive_memory.sh" > /dev/null; then
-        echo "[RUNNING] Interactive memory script is running"
-    else
-        echo "[STOPPED] Interactive memory script is not running"
-    fi
-
-    echo
-    echo "Quick links:"
-    echo "   Memory API: http://localhost:8001/status"
-    echo "   Test command: curl http://localhost:8001/status"
+    echo "Memory System Status"
+    echo "===================="
     
-    if [[ "$VIRTUAL_ENV" == *"memory_env"* ]]; then
-        echo "[ACTIVE] Virtual environment is activated"
+    # Check if the system is running (main thing you care about)
+    if curl -s http://localhost:8001/status > /dev/null; then
+        echo "✅ Memory system is running and ready"
+        echo "   API: http://localhost:8001/status"
+        
+        # Show virtual environment status only if relevant
+        if [[ "$VIRTUAL_ENV" == *"memory_env"* ]]; then
+            echo "   Virtual environment: Active in this shell"
+        fi
     else
-        echo "[INACTIVE] Virtual environment not activated in this shell"
+        echo "❌ Memory system is not running"
+        echo "   Run 'therapy start' to start it"
+        
+        # Only show environment issues if system isn't running
+        if [ ! -d "memory_env" ]; then
+            echo "   Setup needed: Virtual environment missing"
+        elif ! (source memory_env/bin/activate 2>/dev/null && python3 -c "import flask_limiter" 2>/dev/null); then
+            echo "   Setup needed: Dependencies missing or broken"
+        fi
     fi
 }
 
