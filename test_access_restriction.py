@@ -18,7 +18,7 @@ def test_api_access_restriction():
     # Wrong token
     wrong_token = "invalid_token"
     
-    api_url = "http://127.0.0.1:5001"
+    api_url = "http://127.0.0.1:8001"
     
     print("Testing memory API access restriction...")
     print(f"Current directory: {os.getcwd()}")

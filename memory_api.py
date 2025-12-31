@@ -24,7 +24,6 @@ app = Flask(__name__)
 import tempfile
 from flask_limiter.util import get_remote_address
 from flask_limiter import Limiter
-from flask_limiter.storage import FileStorage
 
 # Create rate limit storage directory in private location
 rate_limit_dir = '/Users/beck/Documents/private/memory_rate_limits'
@@ -32,8 +31,7 @@ os.makedirs(rate_limit_dir, exist_ok=True)
 
 limiter = Limiter(
     key_func=get_remote_address,
-    default_limits=[f"{Config.RATE_LIMIT_PER_MINUTE} per minute"],
-    storage_uri=f"file://{rate_limit_dir}"
+    default_limits=[f"{Config.RATE_LIMIT_PER_MINUTE} per minute"]
 )
 limiter.init_app(app)
 
@@ -282,7 +280,7 @@ def status():
             "total_insights": "available",
             "entities": ["A", "N", "X", "trauma_responses"],  # Known entities
             "version": "1.0.0",
-            "port": 5001
+            "port": 8001
         })
     except Exception as e:
         return jsonify({

@@ -142,7 +142,7 @@ class SimpleMemoryMCPServer:
         try:
             if self.memory_client.is_server_running():
                 status = self.memory_client.get_status()
-                result_text = f"✅ Memory system is running\nPort: 5001\nStatus: {status.get('status', 'unknown')}"
+                result_text = f"✅ Memory system is running\nPort: 8001\nStatus: {status.get('status', 'unknown')}"
             else:
                 result_text = "❌ Memory server is not running. Start with: ./start_server.sh"
             

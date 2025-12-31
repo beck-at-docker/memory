@@ -294,7 +294,7 @@ python3 test_system.py
 ./therapy.sh start
 
 # Manual troubleshooting
-lsof -i :5001  # Check if port 5001 is in use
+lsof -i :8001  # Check if port 8001 is in use
 pkill -f memory_api.py  # Kill existing process
 ```
 

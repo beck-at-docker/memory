@@ -15,7 +15,7 @@ from typing import List, Dict, Optional
 class MemoryClient:
     """Client for interacting with memory API"""
     
-    def __init__(self, api_url: str = "http://127.0.0.1:5001"):
+    def __init__(self, api_url: str = "http://127.0.0.1:8001"):
         self.api_url = api_url
         
         # Check if running from allowed project directory

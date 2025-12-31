@@ -12,7 +12,7 @@ This document contains detailed configuration options, API reference, and advanc
    - Layered architecture (surface/mid/deep)
 
 2. **Memory API** (`memory_api.py`)
-   - HTTP API on port 5001
+   - HTTP API on port 8001
    - Endpoints: `/query`, `/add`, `/status`, `/entities`
 
 3. **MCP Server** (`memory_mcp_server_simple.py`) 
@@ -142,7 +142,7 @@ Set these in your shell environment:
 
 ```bash
 export MEMORY_DB_PATH="$HOME/Documents/private/memory_data/personal_insights.db"
-export MEMORY_API_PORT=5001
+export MEMORY_API_PORT=8001
 export MEMORY_LOG_LEVEL=INFO
 ```
 
@@ -630,7 +630,7 @@ python3 test_system.py
 python3 -m pytest tests/ -v
 
 # Manual API testing
-curl -X POST http://localhost:5001/query -d '{"query": "test"}'
+curl -X POST http://localhost:8001/query -d '{"query": "test"}'
 ```
 
 ## License

@@ -1,0 +1,18 @@
+2025-09-08 18:42:00 - memory_api - INFO - memory_api.py:318 - Starting Memory API Server
+2025-09-08 18:42:00 - memory_api - INFO - memory_api.py:319 - Configuration: {'api_host': '127.0.0.1', 'api_port': 8001, 'database_path': 'memory.db', 'rate_limit': 60, 'allowed_dirs': ['/Users/beck/Documents']}
+2025-09-08 18:42:00 - memory_api - INFO - memory_api.py:108 - Initializing memory system with database: /Users/beck/Documents/private/memory_data/memory.db
+2025-09-08 18:42:00 - memory_api - INFO - memory_api.py:116 - Memory system initialized successfully
+2025-09-08 18:42:00 - memory_api - INFO - memory_api.py:325 - Starting server on 127.0.0.1:8001
+2025-09-08 18:52:56 - memory_api - INFO - memory_api.py:318 - Starting Memory API Server
+2025-09-08 18:52:56 - memory_api - INFO - memory_api.py:319 - Configuration: {'api_host': '127.0.0.1', 'api_port': 8001, 'database_path': 'memory.db', 'rate_limit': 60, 'allowed_dirs': ['/Users/beck/Documents']}
+2025-09-08 18:52:56 - memory_api - INFO - memory_api.py:108 - Initializing memory system with database: /Users/beck/Documents/private/memory_data/memory.db
+2025-09-08 18:52:56 - memory_api - INFO - memory_api.py:116 - Memory system initialized successfully
+2025-09-08 18:52:56 - memory_api - INFO - memory_api.py:325 - Starting server on 127.0.0.1:8001
+2025-09-08 18:53:38 - memory_api - WARNING - memory_api.py:61 - Missing required fields: ['input']
+2025-09-08 18:54:12 - memory_api - WARNING - memory_api.py:73 - Missing access token from 127.0.0.1
+2025-09-08 18:59:28 - memory_api - WARNING - memory_api.py:73 - Missing access token from 127.0.0.1
+2025-10-01 10:06:54 - memory_api - INFO - memory_api.py:318 - Starting Memory API Server
+2025-10-01 10:06:54 - memory_api - INFO - memory_api.py:319 - Configuration: {'api_host': '127.0.0.1', 'api_port': 8001, 'database_path': 'memory.db', 'rate_limit': 60, 'allowed_dirs': ['/Users/beck/Documents']}
+2025-10-01 10:06:54 - memory_api - INFO - memory_api.py:108 - Initializing memory system with database: /Users/beck/Documents/private/memory_data/memory.db
+2025-10-01 10:06:54 - memory_api - INFO - memory_api.py:116 - Memory system initialized successfully
+2025-10-01 10:06:54 - memory_api - INFO - memory_api.py:325 - Starting server on 127.0.0.1:8001
