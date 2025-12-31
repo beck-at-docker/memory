@@ -11,22 +11,24 @@ import os
 import hashlib
 from datetime import datetime
 from typing import List, Dict, Optional
+from config import Config
+from logging_config import get_logger
 
 class MemoryClient:
     """Client for interacting with memory API"""
     
     def __init__(self, api_url: str = "http://127.0.0.1:8001"):
         self.api_url = api_url
+        self.logger = get_logger('memory_client')
         
-        # Check if running from allowed project directory
-        allowed_project = os.path.expanduser("~/Documents/private/memory")
+        # Check if running from allowed project directory using Config
         current_dir = os.getcwd()
         
-        if not current_dir.startswith(allowed_project):
-            raise PermissionError(f"Memory client access denied from: {current_dir}. Must run from: {allowed_project}")
+        if not Config.is_path_allowed(current_dir):
+            raise PermissionError(f"Memory client access denied from: {current_dir}. Must run from allowed directories: {Config.ALLOWED_PROJECT_DIRS}")
         
-        # Generate token based on memory project directory
-        self.access_token = hashlib.sha256(allowed_project.encode()).hexdigest()[:16]
+        # Generate token using same method as server
+        self.access_token = Config.generate_secure_token(current_dir)
         self.headers = {"X-Memory-Token": self.access_token}
         
     def is_server_running(self) -> bool:

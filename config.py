@@ -9,8 +9,9 @@ from typing import Dict, Any
 class Config:
     """Configuration class for Claude Memory System"""
     
-    # Database settings
-    DATABASE_PATH = os.getenv('MEMORY_DB_PATH', 'memory.db')
+    # Database settings - use absolute path in data directory
+    _DATA_DIR = os.path.expanduser('~/Documents/private/memory_data')
+    DATABASE_PATH = os.getenv('MEMORY_DB_PATH', os.path.join(_DATA_DIR, 'personal_insights.db'))
     TEST_DATABASE_PATH = os.getenv('TEST_DB_PATH', 'test.db')
     
     # API settings
@@ -30,7 +31,7 @@ class Config:
     READ_TIMEOUT = int(os.getenv('READ_TIMEOUT', '10'))
     
     # Paths
-    ALLOWED_PROJECT_DIRS = os.getenv('ALLOWED_PROJECT_DIRS', '/Users/beck/Documents').split(',')
+    ALLOWED_PROJECT_DIRS = os.getenv('ALLOWED_PROJECT_DIRS', '~/Documents/private,~/Documents/private/memory').split(',')
     
     # Crisis detection patterns
     CRISIS_PATTERNS = [
@@ -55,7 +56,12 @@ class Config:
     @classmethod
     def get_database_path(cls, test: bool = False) -> str:
         """Get database path for regular or test database"""
-        return cls.TEST_DATABASE_PATH if test else cls.DATABASE_PATH
+        if test:
+            return cls.TEST_DATABASE_PATH
+        
+        # Ensure data directory exists
+        os.makedirs(os.path.dirname(cls.DATABASE_PATH), exist_ok=True)
+        return cls.DATABASE_PATH
     
     @classmethod
     def generate_secure_token(cls, data: str) -> str:
@@ -76,7 +82,10 @@ class Config:
         path_obj = Path(path).resolve()
         for allowed_dir in cls.ALLOWED_PROJECT_DIRS:
             try:
-                path_obj.relative_to(Path(allowed_dir).resolve())
+                # Expand user home directory
+                expanded_dir = os.path.expanduser(allowed_dir)
+                allowed_path = Path(expanded_dir).resolve()
+                path_obj.relative_to(allowed_path)
                 return True
             except ValueError:
                 continue
