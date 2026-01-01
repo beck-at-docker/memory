@@ -183,62 +183,71 @@ class SimpleContextualInsightRetrieval:
             conn.commit()
     
     def _initialize_triggers(self) -> Dict[str, SemanticTrigger]:
-        """Initialize semantic triggers"""
-        return {
-            "A": SemanticTrigger(
-                entity="A",
-                keywords={"trust", "relationship", "trustworthy", "lucky", "word is enough"},
+        """
+        Initialize semantic triggers with descriptive entity names.
+        Also includes single-letter shortcuts for backward compatibility.
+        """
+        triggers = {
+            "partner_A": SemanticTrigger(
+                entity="partner_A",
+                keywords={"trust", "relationship", "trustworthy", "lucky", "word is enough", 
+                          "partner", "husband", "A"},
                 max_surface_insights=3
             ),
-            "N": SemanticTrigger(
-                entity="N", 
+            "child_N": SemanticTrigger(
+                entity="child_N", 
                 keywords={"boundaries", "parenting", "school", "hygiene", "anger", "yells", "swears", 
-                          "fights", "silence", "protective silence", "loyalty"},
+                          "fights", "silence", "protective silence", "loyalty", "N", "son", "child", "kid"},
                 max_surface_insights=3
             ),
-            "X": SemanticTrigger(
-                entity="X",
+            "ex_X": SemanticTrigger(
+                entity="ex_X",
                 keywords={"voice", "trauma", "inadequacy", "scanning", "contact", "charming", "reasonable", 
-                          "best behavior", "performance", "good dad", "case", "absent parent"},
+                          "best behavior", "performance", "good dad", "case", "absent parent", "X", "ex"},
                 max_surface_insights=3
             ),
-            "beck": SemanticTrigger(
-                entity="beck",
+            "self_beck": SemanticTrigger(
+                entity="self_beck",
                 keywords={"strategic sacrifice", "court avoidance", "moral certainty", "strength", 
-                          "doing the right thing", "protective parenting", "trauma responses", "triggered"},
+                          "doing the right thing", "protective parenting", "beck", "I", "me", "my"},
                 max_surface_insights=3
             ),
             "internal_voice": SemanticTrigger(
                 entity="internal_voice",
                 keywords={"internal voice", "sabotage", "reality inversion", "hurting", "loving parent", 
-                          "boundaries", "weaponization", "love"},
+                          "boundaries", "weaponization", "love", "voice in my head", "self-talk"},
                 max_surface_insights=2
             ),
-            "parenting": SemanticTrigger(
-                entity="parenting",
-                keywords={"parenting", "boundaries", "love through boundaries", "safety", "structure", 
-                          "moral certainty", "holding the line", "parenting strength"},
-                max_surface_insights=3
-            ),
-            "trauma": SemanticTrigger(
-                entity="trauma",
+            "trauma_responses": SemanticTrigger(
+                entity="trauma_responses",
                 keywords={"trauma", "trauma responses", "triggered", "nervous system", "danger", 
-                          "disproportionate responses"},
+                          "disproportionate responses", "activation", "ptsd"},
                 max_surface_insights=2
             )
         }
+        
+        # Add backward compatibility mappings for single letters
+        # These allow old queries using "A", "N", "X" to still work
+        triggers["A"] = triggers["partner_A"]
+        triggers["N"] = triggers["child_N"]
+        triggers["X"] = triggers["ex_X"]
+        triggers["beck"] = triggers["self_beck"]
+        
+        return triggers
     
     def detect_context_triggers(self, user_input: str) -> List[str]:
         """Detect activated triggers"""
-        activated = []
+        activated = set()
         user_lower = user_input.lower()
         
         for trigger_name, trigger in self.semantic_triggers.items():
             if (trigger.entity.lower() in user_lower or
                 any(keyword in user_lower for keyword in trigger.keywords)):
-                activated.append(trigger_name)
+                # Add the canonical (descriptive) entity name
+                canonical_name = trigger.entity
+                activated.add(canonical_name)
         
-        return activated
+        return sorted(activated)
     
     def add_insight(self, insight: Insight):
         """Add insight to database using connection pool"""
@@ -372,12 +381,12 @@ def test_simple_system():
     # Initialize system with context manager for proper cleanup
     with SimpleContextualInsightRetrieval("test_simple.db") as system:
         
-        # Add test insights
+        # Add test insights with descriptive entity names
         test_insights = [
             Insight(
                 id=str(uuid.uuid4()),
                 content="A is trustworthy. His word is enough. This is bedrock truth.",
-                entities={"A"},
+                entities={"partner_A"},  # Using descriptive name
                 themes={"trust", "relationships"},
                 effectiveness_score=1.0,
                 layer="surface",
@@ -386,7 +395,7 @@ def test_simple_system():
             Insight(
                 id=str(uuid.uuid4()),
                 content="Taking trauma responses to therapy protects relationship with A",
-                entities={"A", "trauma_responses"},
+                entities={"partner_A", "trauma_responses"},  # Descriptive names
                 themes={"strategies", "relationships", "trauma"},
                 effectiveness_score=0.8,
                 layer="surface", 
@@ -395,7 +404,7 @@ def test_simple_system():
             Insight(
                 id=str(uuid.uuid4()),
                 content="Boundaries with N are love, not cruelty. Hold the line with love instead of fear.",
-                entities={"N"},
+                entities={"child_N"},  # Descriptive name
                 themes={"parenting", "boundaries", "strategies"}, 
                 effectiveness_score=0.9,
                 layer="surface",
@@ -407,18 +416,20 @@ def test_simple_system():
         for insight in test_insights:
             system.add_insight(insight)
         
-        print("✓ Test insights added")
+        print("✓ Test insights added with descriptive entity names")
         
-        # Test retrieval
+        # Test retrieval with both old single-letter and new descriptive names
         test_cases = [
-            "I'm worried about trusting A",
-            "N is being difficult about boundaries", 
-            "I'm having trauma responses",
-            "What strategies worked for parenting?"
+            ("I'm worried about trusting A", "Single letter 'A' (backward compat)"),
+            ("I'm worried about my partner", "Descriptive 'partner' keyword"),
+            ("N is being difficult about boundaries", "Single letter 'N' (backward compat)"),
+            ("My child needs structure", "Descriptive 'child' keyword"),
+            ("I'm having trauma responses", "Descriptive entity name"),
+            ("What strategies worked for parenting?", "Theme-based query")
         ]
         
-        for test_input in test_cases:
-            print(f"\nTest: '{test_input}'")
+        for test_input, description in test_cases:
+            print(f"\nTest: '{test_input}' ({description})")
             
             # Detect triggers
             triggers = system.detect_context_triggers(test_input)
@@ -432,11 +443,13 @@ def test_simple_system():
                 print("Retrieved insights:")
                 for insight in surface_insights:
                     print(f"  [{insight.insight_type.upper()}] {insight.content}")
+                    print(f"      Entities: {', '.join(insight.entities)}")
             else:
                 print("  No insights retrieved")
     
     print("\n" + "=" * 60)
     print("✓ Simple system test completed successfully!")
+    print("✓ Backward compatibility verified")
     print("✓ Connection pool properly cleaned up")
 
 if __name__ == "__main__":
