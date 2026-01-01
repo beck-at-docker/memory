@@ -174,8 +174,9 @@ Score:"""
             
             score_text = response.choices[0].message.content.strip()
             
-            # Extract first number found
-            numbers = re.findall(r'0?\.\d+|[01]\.0', score_text)
+            # Extract first number found (handles 0, 1, 0.5, 1.0, 0.75, etc.)
+            # Pattern matches: 0, 1, 0.5, 1.0, 0.123, etc.
+            numbers = re.findall(r'[01](?:\.\d+)?', score_text)
             if numbers:
                 score = float(numbers[0])
                 return max(0.0, min(1.0, score))  # Clamp to 0-1

@@ -4,7 +4,7 @@ Configuration management for Claude Memory System
 import os
 import secrets
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 class Config:
     """Configuration class for Claude Memory System"""
@@ -101,7 +101,7 @@ class Config:
         pid_file.write_text(str(pid))
     
     @classmethod
-    def read_pid_file(cls, service_name: str) -> int | None:
+    def read_pid_file(cls, service_name: str) -> Optional[int]:
         """Read PID from file"""
         pid_file = cls.get_pid_file(service_name)
         if not pid_file.exists():

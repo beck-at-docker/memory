@@ -20,11 +20,6 @@ from functools import wraps
 
 app = Flask(__name__)
 
-# Setup rate limiting with filesystem storage
-import tempfile
-from flask_limiter.util import get_remote_address
-from flask_limiter import Limiter
-
 # Setup rate limiting (using in-memory storage for local development)
 limiter = Limiter(
     key_func=get_remote_address,
@@ -73,6 +68,7 @@ def verify_access_token():
     # Verify against any allowed project directory
     # Client generates token based on their current directory
     for allowed_dir in Config.ALLOWED_PROJECT_DIRS:
+        # Expand user paths consistently
         allowed_path = os.path.expanduser(allowed_dir)
         expected_token = Config.generate_secure_token(allowed_path)
         
@@ -80,8 +76,8 @@ def verify_access_token():
             logger.debug(f"Valid access token from {request.remote_addr}")
             return True
     
-    # Also check token for current server directory
-    current_dir = os.getcwd()
+    # Also check token for current server directory (expanded)
+    current_dir = os.path.expanduser(os.getcwd())
     expected_token = Config.generate_secure_token(current_dir)
     
     if provided_token == expected_token:
@@ -190,6 +186,10 @@ def query_insights():
     if not verify_access_token():
         return jsonify({"error": "Unauthorized access"}), 401
     
+    if memory_system is None:
+        logger.error("Memory system not initialized")
+        return jsonify({"error": "Memory system not available"}), 503
+    
     try:
         data = request.json
         user_input = data.get('input', '').strip()
@@ -238,6 +238,10 @@ def add_insight():
     if not verify_access_token():
         return jsonify({"error": "Unauthorized access"}), 401
     
+    if memory_system is None:
+        logger.error("Memory system not initialized")
+        return jsonify({"error": "Memory system not available"}), 503
+    
     try:
         data = request.json
         
@@ -279,6 +283,13 @@ def add_insight():
 @app.route('/status', methods=['GET'])
 def status():
     """Get system status"""
+    # Check if memory system is initialized
+    if memory_system is None:
+        return jsonify({
+            "status": "error",
+            "error": "Memory system not initialized"
+        }), 503
+    
     try:
         # Get basic system info without querying database directly
         return jsonify({
@@ -286,7 +297,7 @@ def status():
             "total_insights": "available",
             "entities": ["A", "N", "X", "trauma_responses"],  # Known entities
             "version": "1.0.0",
-            "port": 8001
+            "port": Config.API_PORT
         })
     except Exception as e:
         return jsonify({
@@ -297,6 +308,9 @@ def status():
 @app.route('/entities', methods=['GET'])
 def get_entities():
     """Get all entities being tracked"""
+    if memory_system is None:
+        return jsonify({"error": "Memory system not initialized"}), 503
+    
     try:
         # Get stats for known entities
         entities = ["A", "N", "X", "trauma_responses"]

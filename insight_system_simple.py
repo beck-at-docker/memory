@@ -12,6 +12,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 import sqlite3
 import uuid
+import threading
+from contextlib import contextmanager
+from queue import Queue, Empty
 
 @dataclass
 class Insight:
@@ -39,44 +42,145 @@ class SemanticTrigger:
     max_surface_insights: int = 3
     context_patterns: List[str] = field(default_factory=list)
 
+
+class ConnectionPool:
+    """Thread-safe SQLite connection pool"""
+    
+    def __init__(self, db_path: str, pool_size: int = 5):
+        """
+        Initialize connection pool
+        
+        Args:
+            db_path: Path to SQLite database
+            pool_size: Maximum number of connections to pool
+        """
+        self.db_path = db_path
+        self.pool_size = pool_size
+        self._pool = Queue(maxsize=pool_size)
+        self._lock = threading.Lock()
+        self._created_connections = 0
+        
+        # Pre-create connections
+        for _ in range(pool_size):
+            self._create_connection()
+    
+    def _create_connection(self) -> sqlite3.Connection:
+        """Create a new database connection with optimal settings"""
+        conn = sqlite3.connect(
+            self.db_path,
+            check_same_thread=False,  # Allow use across threads
+            timeout=20.0,  # Wait up to 20s for locks
+            isolation_level=None  # Auto-commit mode for better concurrency
+        )
+        
+        # Enable Write-Ahead Logging for better concurrent access
+        conn.execute('PRAGMA journal_mode=WAL')
+        
+        # Optimize for performance
+        conn.execute('PRAGMA synchronous=NORMAL')
+        conn.execute('PRAGMA cache_size=-64000')  # 64MB cache
+        conn.execute('PRAGMA temp_store=MEMORY')
+        
+        # Row factory for easier access
+        conn.row_factory = sqlite3.Row
+        
+        self._created_connections += 1
+        return conn
+    
+    @contextmanager
+    def get_connection(self):
+        """
+        Get a connection from the pool (context manager)
+        
+        Usage:
+            with pool.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute(...)
+        """
+        conn = None
+        try:
+            # Try to get connection from pool (non-blocking)
+            try:
+                conn = self._pool.get_nowait()
+            except Empty:
+                # Pool is empty, create new connection if under limit
+                with self._lock:
+                    if self._created_connections < self.pool_size * 2:  # Allow burst
+                        conn = self._create_connection()
+                    else:
+                        # Wait for a connection to be returned
+                        conn = self._pool.get(timeout=5.0)
+            
+            yield conn
+            
+        finally:
+            # Return connection to pool
+            if conn is not None:
+                try:
+                    # Rollback any uncommitted transactions
+                    conn.rollback()
+                    self._pool.put_nowait(conn)
+                except:
+                    # Pool is full or connection is bad, close it
+                    try:
+                        conn.close()
+                    except:
+                        pass
+    
+    def close_all(self):
+        """Close all connections in the pool"""
+        while not self._pool.empty():
+            try:
+                conn = self._pool.get_nowait()
+                conn.close()
+            except:
+                pass
+
+
 class SimpleContextualInsightRetrieval:
     """Simplified version without ML dependencies"""
     
-    def __init__(self, db_path: str = "insights_simple.db"):
+    def __init__(self, db_path: str = "insights_simple.db", pool_size: int = 5):
         self.db_path = db_path
         self.semantic_triggers = self._initialize_triggers()
+        
+        # Initialize connection pool
+        self.pool = ConnectionPool(db_path, pool_size)
+        
+        # Initialize database schema
         self._init_database()
     
     def _init_database(self):
-        """Initialize SQLite database"""
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS insights (
-                id TEXT PRIMARY KEY,
-                content TEXT NOT NULL,
-                entities TEXT,
-                themes TEXT,
-                timestamp TEXT,
-                effectiveness_score REAL,
-                growth_stage TEXT,
-                layer TEXT,
-                insight_type TEXT,
-                supersedes TEXT,
-                superseded_by TEXT,
-                source_file TEXT,
-                context TEXT
-            )
-        ''')
-        
-        cursor.execute('CREATE INDEX IF NOT EXISTS idx_entities ON insights(entities)')
-        cursor.execute('CREATE INDEX IF NOT EXISTS idx_timestamp ON insights(timestamp)')
-        cursor.execute('CREATE INDEX IF NOT EXISTS idx_effectiveness ON insights(effectiveness_score)')
-        cursor.execute('CREATE INDEX IF NOT EXISTS idx_type ON insights(insight_type)')
-        
-        conn.commit()
-        conn.close()
+        """Initialize SQLite database with proper schema"""
+        with self.pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS insights (
+                    id TEXT PRIMARY KEY,
+                    content TEXT NOT NULL,
+                    entities TEXT,
+                    themes TEXT,
+                    timestamp TEXT,
+                    effectiveness_score REAL,
+                    growth_stage TEXT,
+                    layer TEXT,
+                    insight_type TEXT,
+                    supersedes TEXT,
+                    superseded_by TEXT,
+                    source_file TEXT,
+                    context TEXT
+                )
+            ''')
+            
+            # Create indexes for common queries
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_entities ON insights(entities)')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_timestamp ON insights(timestamp)')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_effectiveness ON insights(effectiveness_score)')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_type ON insights(insight_type)')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_layer ON insights(layer)')
+            
+            conn.commit()
     
     def _initialize_triggers(self) -> Dict[str, SemanticTrigger]:
         """Initialize semantic triggers"""
@@ -137,34 +241,38 @@ class SimpleContextualInsightRetrieval:
         return activated
     
     def add_insight(self, insight: Insight):
-        """Add insight to database"""
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
+        """Add insight to database using connection pool"""
+        # Store entities with leading/trailing commas for exact matching
+        entities_str = ',' + ','.join(insight.entities) + ',' if insight.entities else ''
+        themes_str = ',' + ','.join(insight.themes) + ',' if insight.themes else ''
+        supersedes_str = ',' + ','.join(insight.supersedes) + ',' if insight.supersedes else ''
         
-        cursor.execute('''
-            INSERT OR REPLACE INTO insights VALUES 
-            (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (
-            insight.id,
-            insight.content,
-            ','.join(insight.entities),
-            ','.join(insight.themes),
-            insight.timestamp.isoformat(),
-            insight.effectiveness_score,
-            insight.growth_stage,
-            insight.layer,
-            insight.insight_type,
-            ','.join(insight.supersedes),
-            insight.superseded_by,
-            insight.source_file,
-            insight.context
-        ))
-        
-        conn.commit()
-        conn.close()
+        with self.pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute('''
+                INSERT OR REPLACE INTO insights VALUES 
+                (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                insight.id,
+                insight.content,
+                entities_str,
+                themes_str,
+                insight.timestamp.isoformat(),
+                insight.effectiveness_score,
+                insight.growth_stage,
+                insight.layer,
+                insight.insight_type,
+                supersedes_str,
+                insight.superseded_by,
+                insight.source_file,
+                insight.context
+            ))
+            
+            conn.commit()
     
     def retrieve_contextual_insights(self, user_input: str, max_insights: int = 5) -> Dict[str, List[Insight]]:
-        """Retrieve relevant insights"""
+        """Retrieve relevant insights using connection pool"""
         triggers = self.detect_context_triggers(user_input)
         
         if not triggers:
@@ -176,126 +284,160 @@ class SimpleContextualInsightRetrieval:
             entity_insights = self._get_insights_by_entity(trigger_name)
             all_insights.extend(entity_insights)
         
+        # Remove duplicates while preserving order
+        seen_ids = set()
+        unique_insights = []
+        for insight in all_insights:
+            if insight.id not in seen_ids:
+                seen_ids.add(insight.id)
+                unique_insights.append(insight)
+        
         # Sort by effectiveness and recency
-        all_insights.sort(key=lambda x: (x.effectiveness_score, 
-                                       -(datetime.now() - x.timestamp).days), 
-                         reverse=True)
+        unique_insights.sort(
+            key=lambda x: (x.effectiveness_score, -(datetime.now() - x.timestamp).days), 
+            reverse=True
+        )
         
         # Categorize by layer
-        surface = [i for i in all_insights if i.layer == "surface"][:3]
-        mid = [i for i in all_insights if i.layer == "mid"][:5]  
-        deep = [i for i in all_insights if i.layer == "deep"][:max_insights]
+        surface = [i for i in unique_insights if i.layer == "surface"][:3]
+        mid = [i for i in unique_insights if i.layer == "mid"][:5]  
+        deep = [i for i in unique_insights if i.layer == "deep"][:max_insights]
         
         return {"surface": surface, "mid": mid, "deep": deep}
     
     def _get_insights_by_entity(self, entity: str) -> List[Insight]:
-        """Get insights for entity from database"""
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            SELECT * FROM insights 
-            WHERE entities LIKE ? 
-            ORDER BY effectiveness_score DESC, timestamp DESC
-        ''', (f'%{entity}%',))
-        
-        rows = cursor.fetchall()
-        conn.close()
+        """Get insights for entity from database using connection pool"""
+        with self.pool.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Use exact entity matching with comma delimiters to avoid false matches
+            # e.g., searching for "N" won't match "AN" or "IN"
+            cursor.execute('''
+                SELECT * FROM insights 
+                WHERE entities LIKE ? 
+                ORDER BY effectiveness_score DESC, timestamp DESC
+            ''', (f'%,{entity},%',))
+            
+            rows = cursor.fetchall()
         
         insights = []
         for row in rows:
+            # Parse entities by stripping leading/trailing commas and splitting
+            entities_raw = row['entities'].strip(',') if row['entities'] else ''
+            entities = set(entities_raw.split(',')) if entities_raw else set()
+            
+            themes_raw = row['themes'].strip(',') if row['themes'] else ''
+            themes = set(themes_raw.split(',')) if themes_raw else set()
+            
+            supersedes_raw = row['supersedes'].strip(',') if row['supersedes'] else ''
+            supersedes = supersedes_raw.split(',') if supersedes_raw else []
+            
             insight = Insight(
-                id=row[0],
-                content=row[1],
-                entities=set(row[2].split(',') if row[2] else []),
-                themes=set(row[3].split(',') if row[3] else []),
-                timestamp=datetime.fromisoformat(row[4]),
-                effectiveness_score=row[5],
-                growth_stage=row[6],
-                layer=row[7], 
-                insight_type=row[8],
-                supersedes=row[9].split(',') if row[9] else [],
-                superseded_by=row[10],
-                source_file=row[11],
-                context=row[12]
+                id=row['id'],
+                content=row['content'],
+                entities=entities,
+                themes=themes,
+                timestamp=datetime.fromisoformat(row['timestamp']),
+                effectiveness_score=row['effectiveness_score'],
+                growth_stage=row['growth_stage'],
+                layer=row['layer'], 
+                insight_type=row['insight_type'],
+                supersedes=supersedes,
+                superseded_by=row['superseded_by'],
+                source_file=row['source_file'],
+                context=row['context']
             )
             insights.append(insight)
         
         return insights
+    
+    def close(self):
+        """Close all database connections"""
+        self.pool.close_all()
+    
+    def __enter__(self):
+        """Context manager entry"""
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Context manager exit - cleanup connections"""
+        self.close()
+
 
 def test_simple_system():
     """Test the simplified system"""
     print("Testing Simplified Contextual Insight Retrieval System")
     print("=" * 60)
     
-    # Initialize system
-    system = SimpleContextualInsightRetrieval("test_simple.db")
-    
-    # Add test insights
-    test_insights = [
-        Insight(
-            id=str(uuid.uuid4()),
-            content="A is trustworthy. His word is enough. This is bedrock truth.",
-            entities={"A"},
-            themes={"trust", "relationships"},
-            effectiveness_score=1.0,
-            layer="surface",
-            insight_type="anchor"
-        ),
-        Insight(
-            id=str(uuid.uuid4()),
-            content="Taking trauma responses to therapy protects relationship with A",
-            entities={"A", "trauma_responses"},
-            themes={"strategies", "relationships", "trauma"},
-            effectiveness_score=0.8,
-            layer="surface", 
-            insight_type="strategy"
-        ),
-        Insight(
-            id=str(uuid.uuid4()),
-            content="Boundaries with N are love, not cruelty. Hold the line with love instead of fear.",
-            entities={"N"},
-            themes={"parenting", "boundaries", "strategies"}, 
-            effectiveness_score=0.9,
-            layer="surface",
-            insight_type="strategy"
-        )
-    ]
-    
-    # Add insights to system
-    for insight in test_insights:
-        system.add_insight(insight)
-    
-    print("✓ Test insights added")
-    
-    # Test retrieval
-    test_cases = [
-        "I'm worried about trusting A",
-        "N is being difficult about boundaries", 
-        "I'm having trauma responses",
-        "What strategies worked for parenting?"
-    ]
-    
-    for test_input in test_cases:
-        print(f"\nTest: '{test_input}'")
+    # Initialize system with context manager for proper cleanup
+    with SimpleContextualInsightRetrieval("test_simple.db") as system:
         
-        # Detect triggers
-        triggers = system.detect_context_triggers(test_input)
-        print(f"Triggers detected: {triggers}")
+        # Add test insights
+        test_insights = [
+            Insight(
+                id=str(uuid.uuid4()),
+                content="A is trustworthy. His word is enough. This is bedrock truth.",
+                entities={"A"},
+                themes={"trust", "relationships"},
+                effectiveness_score=1.0,
+                layer="surface",
+                insight_type="anchor"
+            ),
+            Insight(
+                id=str(uuid.uuid4()),
+                content="Taking trauma responses to therapy protects relationship with A",
+                entities={"A", "trauma_responses"},
+                themes={"strategies", "relationships", "trauma"},
+                effectiveness_score=0.8,
+                layer="surface", 
+                insight_type="strategy"
+            ),
+            Insight(
+                id=str(uuid.uuid4()),
+                content="Boundaries with N are love, not cruelty. Hold the line with love instead of fear.",
+                entities={"N"},
+                themes={"parenting", "boundaries", "strategies"}, 
+                effectiveness_score=0.9,
+                layer="surface",
+                insight_type="strategy"
+            )
+        ]
         
-        # Retrieve insights
-        insights = system.retrieve_contextual_insights(test_input)
-        surface_insights = insights.get("surface", [])
+        # Add insights to system
+        for insight in test_insights:
+            system.add_insight(insight)
         
-        if surface_insights:
-            print("Retrieved insights:")
-            for insight in surface_insights:
-                print(f"  [{insight.insight_type.upper()}] {insight.content}")
-        else:
-            print("  No insights retrieved")
+        print("✓ Test insights added")
+        
+        # Test retrieval
+        test_cases = [
+            "I'm worried about trusting A",
+            "N is being difficult about boundaries", 
+            "I'm having trauma responses",
+            "What strategies worked for parenting?"
+        ]
+        
+        for test_input in test_cases:
+            print(f"\nTest: '{test_input}'")
+            
+            # Detect triggers
+            triggers = system.detect_context_triggers(test_input)
+            print(f"Triggers detected: {triggers}")
+            
+            # Retrieve insights
+            insights = system.retrieve_contextual_insights(test_input)
+            surface_insights = insights.get("surface", [])
+            
+            if surface_insights:
+                print("Retrieved insights:")
+                for insight in surface_insights:
+                    print(f"  [{insight.insight_type.upper()}] {insight.content}")
+            else:
+                print("  No insights retrieved")
     
     print("\n" + "=" * 60)
     print("✓ Simple system test completed successfully!")
+    print("✓ Connection pool properly cleaned up")
 
 if __name__ == "__main__":
     test_simple_system()

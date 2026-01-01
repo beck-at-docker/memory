@@ -22,7 +22,7 @@ class MemoryClient:
         self.logger = get_logger('claude_memory_client')
         
         # Check if running from allowed project directory
-        allowed_project = os.path.expanduser("~/Documents/private")
+        allowed_project = os.path.expanduser("~/Documents/private/memory")
         current_dir = os.getcwd()
         
         if not current_dir.startswith(allowed_project):

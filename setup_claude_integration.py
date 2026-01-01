@@ -80,20 +80,19 @@ post_response_hook()
     
     print("✅ Claude Code hooks created")
     
+    # Create properly formatted JSON for user to copy
+    hooks_config = {
+        "hooks": {
+            "user-prompt-submit": f"python3 {submit_hook} '$PROMPT'",
+            "post-response": f"python3 {response_hook}"
+        }
+    }
+    
     # Instructions for user
     print("""
-📋 To enable Claude Code hooks, add these to your Claude settings:
-
-1. Open Claude Code settings
-2. Add hooks configuration:
-
-{
-  "hooks": {
-    "user-prompt-submit": "python3 """ + str(submit_hook) + """ '$PROMPT'",
-    "post-response": "python3 """ + str(response_hook) + """"
-  }
-}
+📋 To enable Claude Code hooks, add this to your Claude settings:
 """)
+    print(json.dumps(hooks_config, indent=2))
     
     return True
 
@@ -151,7 +150,7 @@ wait
 
 2. **Configure Claude Code:**
    - Enable MCP server: memory-system
-   - Add hooks configuration (see above)
+   - Add hooks configuration (see JSON above)
 
 3. **Features now available:**
    ✅ Automatic insight retrieval during conversations
