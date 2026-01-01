@@ -1,54 +1,62 @@
 #!/usr/bin/env python3
 """
-Setup script to create virtual environment and install dependencies
+Setup Python virtual environment for Memory System
 """
 
 import subprocess
 import sys
-import os
+from pathlib import Path
 
-def run_command(cmd, description):
-    """Run a command and print status"""
-    print(f"📦 {description}...")
-    try:
-        result = subprocess.run(cmd, shell=True, check=True, capture_output=True, text=True)
-        print(f"✅ {description} completed")
-        return True
-    except subprocess.CalledProcessError as e:
-        print(f"❌ {description} failed: {e.stderr}")
-        return False
-
-def setup_environment():
-    """Setup virtual environment and install dependencies"""
+def main():
+    print("Setting up Python virtual environment for Memory System")
+    print("=" * 60)
+    
+    # Get script directory
+    script_dir = Path(__file__).parent
+    venv_dir = script_dir / "memory_env"
     
     # Create virtual environment
-    if not run_command("python3 -m venv memory_env", "Creating virtual environment"):
-        return False
+    if venv_dir.exists():
+        print(f"Virtual environment already exists at: {venv_dir}")
+        print("Skipping creation...")
+    else:
+        print(f"Creating virtual environment at: {venv_dir}")
+        try:
+            subprocess.run([
+                sys.executable, "-m", "venv", str(venv_dir)
+            ], check=True)
+            print("✓ Virtual environment created")
+        except subprocess.CalledProcessError as e:
+            print(f"✗ Failed to create virtual environment: {e}")
+            return 1
     
-    # Install requirements (use simple version to avoid scikit-learn compilation issues)
-    if not run_command("memory_env/bin/pip install -r requirements_simple.txt", "Installing requirements"):
-        return False
+    # Install dependencies
+    print("\nInstalling dependencies...")
+    pip_exe = venv_dir / "bin" / "pip3"
+    requirements_file = script_dir / "requirements_simple.txt"
     
-    # Create activation script
-    activation_script = """#!/bin/bash
-# Activate virtual environment and start memory server
-source memory_env/bin/activate
-python3 memory_api.py
-"""
+    if not requirements_file.exists():
+        print(f"✗ Requirements file not found: {requirements_file}")
+        return 1
     
-    with open("start_server.sh", "w") as f:
-        f.write(activation_script)
+    try:
+        subprocess.run([
+            str(pip_exe), "install", "-r", str(requirements_file)
+        ], check=True)
+        print("✓ Dependencies installed")
+    except subprocess.CalledProcessError as e:
+        print(f"✗ Failed to install dependencies: {e}")
+        return 1
     
-    os.chmod("start_server.sh", 0o755)
+    print("\n" + "=" * 60)
+    print("Setup complete!")
+    print("=" * 60)
+    print("\nActivate the environment with:")
+    print(f"  source {venv_dir}/bin/activate")
+    print("\nOr start the system with:")
+    print("  ./therapy.sh start")
     
-    print("\n🎉 Setup complete!")
-    print("\n📋 To start the memory server:")
-    print("   ./start_server.sh")
-    print("\n📋 To use the virtual environment manually:")
-    print("   source memory_env/bin/activate")
-    print("   python3 memory_api.py")
-    
-    return True
+    return 0
 
 if __name__ == "__main__":
-    setup_environment()
+    sys.exit(main())

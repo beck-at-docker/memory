@@ -1,18 +1,16 @@
-2025-09-08 18:42:00 - memory_api - INFO - memory_api.py:318 - Starting Memory API Server
-2025-09-08 18:42:00 - memory_api - INFO - memory_api.py:319 - Configuration: {'api_host': '127.0.0.1', 'api_port': 8001, 'database_path': 'memory.db', 'rate_limit': 60, 'allowed_dirs': ['/Users/beck/Documents']}
-2025-09-08 18:42:00 - memory_api - INFO - memory_api.py:108 - Initializing memory system with database: /Users/beck/Documents/private/memory_data/memory.db
-2025-09-08 18:42:00 - memory_api - INFO - memory_api.py:116 - Memory system initialized successfully
-2025-09-08 18:42:00 - memory_api - INFO - memory_api.py:325 - Starting server on 127.0.0.1:8001
-2025-09-08 18:52:56 - memory_api - INFO - memory_api.py:318 - Starting Memory API Server
-2025-09-08 18:52:56 - memory_api - INFO - memory_api.py:319 - Configuration: {'api_host': '127.0.0.1', 'api_port': 8001, 'database_path': 'memory.db', 'rate_limit': 60, 'allowed_dirs': ['/Users/beck/Documents']}
-2025-09-08 18:52:56 - memory_api - INFO - memory_api.py:108 - Initializing memory system with database: /Users/beck/Documents/private/memory_data/memory.db
-2025-09-08 18:52:56 - memory_api - INFO - memory_api.py:116 - Memory system initialized successfully
-2025-09-08 18:52:56 - memory_api - INFO - memory_api.py:325 - Starting server on 127.0.0.1:8001
-2025-09-08 18:53:38 - memory_api - WARNING - memory_api.py:61 - Missing required fields: ['input']
-2025-09-08 18:54:12 - memory_api - WARNING - memory_api.py:73 - Missing access token from 127.0.0.1
-2025-09-08 18:59:28 - memory_api - WARNING - memory_api.py:73 - Missing access token from 127.0.0.1
-2025-10-01 10:06:54 - memory_api - INFO - memory_api.py:318 - Starting Memory API Server
-2025-10-01 10:06:54 - memory_api - INFO - memory_api.py:319 - Configuration: {'api_host': '127.0.0.1', 'api_port': 8001, 'database_path': 'memory.db', 'rate_limit': 60, 'allowed_dirs': ['/Users/beck/Documents']}
-2025-10-01 10:06:54 - memory_api - INFO - memory_api.py:108 - Initializing memory system with database: /Users/beck/Documents/private/memory_data/memory.db
-2025-10-01 10:06:54 - memory_api - INFO - memory_api.py:116 - Memory system initialized successfully
-2025-10-01 10:06:54 - memory_api - INFO - memory_api.py:325 - Starting server on 127.0.0.1:8001
+/Users/beck/Documents/private/memory_env/lib/python3.13/site-packages/flask_limiter/extension.py:336: UserWarning: Using the in-memory storage for tracking rate limits as no storage was explicitly specified. This is not recommended for production use. See: https://flask-limiter.readthedocs.io#configuring-a-storage-backend for documentation about configuring the storage backend.
+  warnings.warn(
+INFO: Starting Memory API Server
+INFO: Configuration: {'api_host': '127.0.0.1', 'api_port': 8001, 'database_path': 'memory.db', 'rate_limit': 60, 'allowed_dirs': ['/Users/beck/Documents']}
+INFO: Initializing memory system with database: memory.db
+INFO: Setting up new memory database at: memory.db
+INFO: Memory system initialized successfully
+INFO: Starting server on 127.0.0.1:8001
+ * Serving Flask app 'memory_api'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:8001
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [31/Dec/2025 17:28:58] "GET /status HTTP/1.1" 200 -
+itialized successfully
+2025-12-31 17:28:54 - memory_api - INFO - memory_api.py:331 - Starting server on 127.0.0.1:8001

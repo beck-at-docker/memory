@@ -1,42 +1,41 @@
 #!/bin/bash
+# Main entry point for memory system management
+# This is a simple wrapper around therapy_wrapper.sh
 
-# Source the wrapper for virtual environment management
-source "$(dirname "$0")/therapy_wrapper.sh"
+# Get script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-start_therapy() {
-    # Use the wrapper function for proper venv management
-    memory_start
-}
+# Source the wrapper functions
+# shellcheck source=therapy_wrapper.sh
+source "$SCRIPT_DIR/therapy_wrapper.sh"
 
-stop_therapy() {
-    # Use the wrapper function for proper venv management
-    memory_stop
-}
-
-restart_therapy() {
-    # Use the wrapper function for proper venv management
-    memory_restart
-}
-
-status_therapy() {
-    # Use the wrapper function for proper venv management
-    memory_status
-}
-
-# Main script logic
-if [ "$1" = "start" ]; then
-    start_therapy
-elif [ "$1" = "stop" ]; then
-    stop_therapy
-elif [ "$1" = "restart" ]; then
-    restart_therapy
-elif [ "$1" = "status" ]; then
-    status_therapy
-else
-    echo "Usage: $0 {start|stop|restart|status}"
-    echo "  start   - Start the memory system and Claude Code"
-    echo "  stop    - Stop all memory system processes"
-    echo "  restart - Restart the memory system"
-    echo "  status  - Check status of memory system components"
-    exit 1
-fi
+# Handle commands
+case "${1:-}" in
+    start)
+        memory_start
+        ;;
+    stop)
+        memory_stop
+        ;;
+    restart)
+        memory_restart
+        ;;
+    status)
+        memory_status
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|restart|status}"
+        echo ""
+        echo "Commands:"
+        echo "  start   - Start the memory system"
+        echo "  stop    - Stop all memory system processes"
+        echo "  restart - Restart the memory system"
+        echo "  status  - Check status of memory system components"
+        echo ""
+        echo "Examples:"
+        echo "  $0 start    # Start memory system"
+        echo "  $0 status   # Check if running"
+        echo "  $0 stop     # Stop memory system"
+        exit 1
+        ;;
+esac

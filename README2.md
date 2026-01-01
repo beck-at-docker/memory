@@ -10,23 +10,28 @@ This document contains detailed configuration options, API reference, and advanc
    - Stores and retrieves contextual insights
    - No ML dependencies, uses keyword matching
    - Layered architecture (surface/mid/deep)
+   - SQLite database backend
 
 2. **Memory API** (`memory_api.py`)
-   - HTTP API on port 8001
+   - Flask-based HTTP API on port 8001
    - Endpoints: `/query`, `/add`, `/status`, `/entities`
+   - Rate limiting (60 requests/minute)
+   - Token-based authentication
 
 3. **MCP Server** (`memory_mcp_server_simple.py`) 
    - Provides Claude Code integration
-   - Tools: `query_memory`, `add_insight`, `get_memory_status`
+   - Tools: `query_memory`, `get_memory_status`
+   - JSON-RPC 2.0 protocol
 
-4. **Hooks System** (`claude_hooks.py`)
-   - Monitors conversations for insights
-   - Automatic insight retrieval
-   - Crisis detection and response
+4. **Configuration** (`config.py`)
+   - Centralized settings
+   - PID file management
+   - Security token generation
+   - Path validation
 
 ### Data Flow
 
-1. **Input**: User mentions entity (e.g., "I'm worried about trusting my partner")
+1. **Input**: User mentions entity (e.g., "I'm worried about trusting A")
 2. **Trigger Detection**: System identifies keywords and themes
 3. **Retrieval**: Searches database for relevant insights
 4. **Layering**: Returns surface/mid/deep insights based on relevance
@@ -39,205 +44,6 @@ This document contains detailed configuration options, API reference, and advanc
 - **strategy**: Practical approaches that work
 - **observation**: General patterns and insights
 
-### Crisis Mode
-
-Automatically activates when detecting crisis language:
-- Surfaces ALL anchor insights immediately
-- Prioritizes highest effectiveness strategies (>0.8)
-- No progressive disclosure - everything accessible
-
-## Detailed Setup Instructions
-
-### Prerequisites
-
-- Python 3.8+
-- Claude Code (for full integration)
-
-### Step 1: Environment Setup
-
-```bash
-# Clone the repository
-git clone https://github.com/beck-at-docker/memory.git
-cd memory
-
-# Set up Python virtual environment and dependencies
-python3 setup_env.py
-```
-
-This creates:
-- `memory_env/` virtual environment
-- Installs dependencies from `requirements_simple.txt`
-
-### Step 2: Claude Code Integration Setup
-
-```bash
-python3 setup_claude_integration.py
-```
-
-This script will:
-1. Install MCP dependencies
-2. Create MCP server configuration
-3. Set up Claude Code hooks
-4. Generate startup scripts
-
-### Step 3: Claude Code Configuration
-
-#### Global MCP Server Configuration
-
-Add to your Claude Code settings (`~/.config/claude-code/settings.json`):
-
-```json
-{
-  "mcpServers": {
-    "memory-system": {
-      "command": "python3",
-      "args": ["/path/to/memory/memory_mcp_server_simple.py"],
-      "env": {
-        "PYTHONPATH": "/path/to/memory",
-        "PATH": "/path/to/memory/memory_env/bin:/usr/local/bin:/usr/bin:/bin"
-      }
-    }
-  }
-}
-```
-
-#### Project-Specific Configuration
-
-For project-specific memory integration, add to your project's `claude_code_config.json`:
-
-```json
-{
-  "mcpServers": {
-    "memory-system": {
-      "command": "python3",
-      "args": ["/Users/beck/Documents/private/memory/memory_mcp_server_simple.py"],
-      "env": {
-        "PYTHONPATH": "/Users/beck/Documents/private/memory"
-      }
-    }
-  },
-  "hooks": {
-    "user-prompt-submit": "python3 /Users/beck/Documents/private/memory/claude_hooks/user_prompt_submit.py \"$PROMPT\"",
-    "post-response": "python3 /Users/beck/Documents/private/memory/claude_hooks/post_response.py"
-  }
-}
-```
-
-#### Global Hooks Configuration
-
-Add automatic conversation monitoring to global settings:
-
-```json
-{
-  "hooks": {
-    "user-prompt-submit": "python3 /path/to/memory/claude_hooks/user_prompt_submit.py \"$PROMPT\"",
-    "post-response": "python3 /path/to/memory/claude_hooks/post_response.py"
-  }
-}
-```
-
-### Environment Variables
-
-Set these in your shell environment:
-
-```bash
-export MEMORY_DB_PATH="$HOME/Documents/private/memory_data/personal_insights.db"
-export MEMORY_API_PORT=8001
-export MEMORY_LOG_LEVEL=INFO
-```
-
-## Configuration Options
-
-### Memory System Configuration
-
-Edit `insight_system_simple.py` to customize:
-
-#### Entity Triggers
-
-```python
-def _initialize_triggers(self):
-    return {
-        "partner": SemanticTrigger(
-            entity="partner",
-            keywords={"trust", "relationship", "communication", "support"},
-            max_surface_insights=3
-        ),
-        "child": SemanticTrigger(
-            entity="child", 
-            keywords={"boundaries", "parenting", "school", "routines"},
-            max_surface_insights=2
-        ),
-        "work": SemanticTrigger(
-            entity="work",
-            keywords={"stress", "deadlines", "colleagues", "projects"},
-            max_surface_insights=2
-        )
-    }
-```
-
-#### Insight Layers
-
-```python
-class LayeredArchitecture:
-    def __init__(self):
-        self.surface_limit = 5      # Most relevant insights
-        self.mid_limit = 15         # Supporting context  
-        self.deep_limit = 50        # Historical patterns
-```
-
-#### Crisis Detection Keywords
-
-```python
-crisis_keywords = [
-    "crisis", "emergency", "panic", "overwhelmed",
-    "falling apart", "can't handle", "too much",
-    "breakdown", "meltdown", "desperate"
-]
-```
-
-### Adding New Entities
-
-To track new people or concepts:
-
-1. Edit `insight_system_simple.py`:
-
-```python
-def _initialize_triggers(self):
-    triggers = self._get_default_triggers()
-    
-    # Add new entity
-    triggers["therapist"] = SemanticTrigger(
-        entity="therapist",
-        keywords={"therapy", "session", "counseling", "treatment"},
-        max_surface_insights=3
-    )
-    
-    return triggers
-```
-
-2. Restart the memory system
-
-### Customizing Insight Classification
-
-Edit insight type patterns in `insight_system_simple.py`:
-
-```python
-def _classify_insight_type(self, content: str) -> str:
-    content_lower = content.lower()
-    
-    # Custom patterns
-    if re.search(r'game.?changer|revolutionary', content, re.IGNORECASE):
-        return "breakthrough"
-    
-    if re.search(r'works every time|proven strategy', content, re.IGNORECASE):
-        return "strategy"
-        
-    if re.search(r'fundamental truth|always remember', content, re.IGNORECASE):
-        return "anchor"
-    
-    # Default patterns...
-```
-
 ## API Reference
 
 ### HTTP Endpoints
@@ -248,29 +54,33 @@ Query for relevant insights.
 **Request:**
 ```json
 {
-  "query": "worried about trusting partner",
-  "max_insights": 10
+  "input": "worried about trusting A",
+  "max_results": 3
 }
+```
+
+**Headers:**
+```
+Content-Type: application/json
+X-Memory-Token: <generated-token>
 ```
 
 **Response:**
 ```json
 {
-  "surface": [
+  "insights": [
     {
-      "id": "uuid-1234",
-      "content": "Trust builds through consistent actions over time",
-      "entities": ["partner"],
+      "content": "A is trustworthy. His word is enough.",
+      "type": "anchor",
+      "entities": ["A"],
       "themes": ["trust", "relationships"],
-      "insight_type": "anchor",
-      "effectiveness_score": 0.9,
+      "effectiveness": 1.0,
       "timestamp": "2024-01-15T10:30:00Z"
     }
   ],
-  "mid": [...],
-  "deep": [...],
-  "total_insights": 15,
-  "triggers_activated": ["partner", "trust"]
+  "triggers": ["A", "trust"],
+  "total_available": 5,
+  "query_time": 0.023
 }
 ```
 
@@ -280,13 +90,11 @@ Add new insight.
 **Request:**
 ```json
 {
-  "content": "Partner is trustworthy. Actions match words consistently.",
-  "entities": ["partner"],
-  "themes": ["trust", "relationships"],
-  "insight_type": "anchor",
-  "effectiveness_score": 1.0,
-  "growth_stage": "current",
-  "source_file": "conversation_2024-01-15.txt"
+  "content": "Taking trauma responses to therapy protects relationships",
+  "entities": ["A", "trauma_responses"],
+  "themes": ["strategies", "relationships"],
+  "insight_type": "strategy",
+  "effectiveness_score": 0.9
 }
 ```
 
@@ -300,48 +108,32 @@ Add new insight.
 ```
 
 #### GET /status
-System status and statistics.
+System status.
 
 **Response:**
 ```json
 {
   "status": "running",
-  "database_path": "/path/to/insights.db",
-  "total_insights": 247,
-  "entities": {
-    "partner": 45,
-    "child": 32,
-    "work": 28
-  },
-  "insight_types": {
-    "anchor": 15,
-    "breakthrough": 23,
-    "strategy": 67,
-    "observation": 142
-  },
-  "uptime": "2h 34m"
+  "total_insights": "available",
+  "entities": ["A", "N", "X", "trauma_responses"],
+  "version": "1.0.0",
+  "port": 8001
 }
 ```
 
 #### GET /entities
-Entity statistics and counts.
+Entity statistics.
 
 **Response:**
 ```json
 {
-  "entities": {
-    "partner": {
-      "count": 45,
-      "themes": ["trust", "communication", "support"],
-      "avg_effectiveness": 0.78,
-      "recent_insights": 12
-    },
-    "child": {
-      "count": 32,
-      "themes": ["boundaries", "parenting", "school"],
-      "avg_effectiveness": 0.82,
-      "recent_insights": 8
-    }
+  "A": {
+    "count": 12,
+    "latest": "2024-01-15T14:22:00Z"
+  },
+  "N": {
+    "count": 8,
+    "latest": "2024-01-14T09:15:00Z"
   }
 }
 ```
@@ -349,288 +141,732 @@ Entity statistics and counts.
 ### MCP Tools (Available to Claude)
 
 #### query_memory
-Search for relevant insights based on input text.
+Search for relevant insights.
 
 **Parameters:**
-- `query` (string): Search text
-- `max_insights` (integer, optional): Maximum insights to return
+```json
+{
+  "query": "trust and relationships"
+}
+```
 
 **Returns:**
-- Layered insights (surface/mid/deep)
-- Activated triggers
-- Total count
-
-#### add_insight
-Capture new insights from conversations.
-
-**Parameters:**
-- `content` (string): Insight text
-- `entities` (array): Related entities
-- `themes` (array): Related themes  
-- `insight_type` (string): Type of insight
-- `effectiveness_score` (float): Effectiveness rating
-
-**Returns:**
-- Success status
-- Generated insight ID
+```
+**Found insights:**
+• A is trustworthy. His word is enough.
+• Taking trauma responses to therapy protects relationships
+```
 
 #### get_memory_status
-Check system status and statistics.
+Check system status.
 
 **Returns:**
-- System status
-- Database statistics
-- Entity counts
-- Performance metrics
+```
+✅ Memory system is running
+Port: 8001
+Status: running
+```
 
-#### detect_conversation_insights
-Analyze conversation text for potential insights.
-
-**Parameters:**
-- `text` (string): Conversation text to analyze
-
-**Returns:**
-- Suggested insights to capture
-- Detected entities and themes
-- Recommended insight types
-
-## Database Management
-
-### Database Schema
+## Database Schema
 
 ```sql
 CREATE TABLE insights (
     id TEXT PRIMARY KEY,
     content TEXT NOT NULL,
-    entities TEXT,              -- JSON array of entities
-    themes TEXT,                -- JSON array of themes
-    timestamp TEXT,
-    effectiveness_score REAL,
+    entities TEXT,              -- Comma-separated list
+    themes TEXT,                -- Comma-separated list
+    timestamp TEXT,             -- ISO format
+    effectiveness_score REAL,   -- 0.0 to 1.0
     growth_stage TEXT,
-    layer TEXT,
-    insight_type TEXT,
-    supersedes TEXT,            -- JSON array of superseded insight IDs
-    superseded_by TEXT,         -- ID of insight that supersedes this one
+    layer TEXT,                 -- surface/mid/deep
+    insight_type TEXT,          -- anchor/breakthrough/strategy/observation
+    supersedes TEXT,
+    superseded_by TEXT,
     source_file TEXT,
     context TEXT
 );
 
 CREATE INDEX idx_entities ON insights(entities);
-CREATE INDEX idx_themes ON insights(themes);
 CREATE INDEX idx_timestamp ON insights(timestamp);
 CREATE INDEX idx_effectiveness ON insights(effectiveness_score);
 CREATE INDEX idx_type ON insights(insight_type);
 ```
 
-### Backup and Migration
+## Configuration
 
-#### Backup Database
-
-```bash
-# Simple file copy
-cp ~/Documents/private/memory_data/personal_insights.db ~/backup/insights_backup_$(date +%Y%m%d).db
-
-# SQLite dump
-sqlite3 ~/Documents/private/memory_data/personal_insights.db .dump > ~/backup/insights_dump_$(date +%Y%m%d).sql
-```
-
-#### Export to JSON
+### Environment Variables
 
 ```bash
-source memory_env/bin/activate
-python3 -c "
-from claude_memory_client import MemoryClient
-import json
+# Database location
+export MEMORY_DB_PATH="$HOME/Documents/private/memory_data/personal_insights.db"
 
-client = MemoryClient()
-# This would need to be implemented in the client
-insights = client.export_all_insights()
-with open('insights_backup.json', 'w') as f:
-    json.dump(insights, f, indent=2)
-"
+# API settings
+export MEMORY_API_HOST="127.0.0.1"
+export MEMORY_API_PORT="8001"
+
+# Security
+export SECRET_KEY="your-secret-key-here"
+
+# Rate limiting
+export RATE_LIMIT_PER_MINUTE="60"
+
+# Timeouts
+export CONNECTION_TIMEOUT="5"
+export READ_TIMEOUT="10"
+
+# Logging
+export LOG_LEVEL="INFO"
+
+# Allowed directories (comma-separated)
+export ALLOWED_PROJECT_DIRS="~/Documents/private"
 ```
 
-#### Restore from Backup
+### Security Configuration
 
+**Access Control:**
+- API validates requests with HMAC tokens
+- Only allowed directories can access the system
+- Default allowed: `~/Documents/private`
+
+**Token Generation:**
+```python
+# In config.py
+token = hmac.new(
+    SECRET_KEY.encode(),
+    current_directory.encode(),
+    hashlib.sha256
+).hexdigest()
+```
+
+**File Permissions:**
 ```bash
-# From SQLite backup
-cp ~/backup/insights_backup_20240115.db ~/Documents/private/memory_data/personal_insights.db
+# Secure the database
+chmod 700 ~/Documents/private/memory_data/
+chmod 600 ~/Documents/private/memory_data/*.db
 
-# From SQL dump
-sqlite3 ~/Documents/private/memory_data/personal_insights.db < ~/backup/insights_dump_20240115.sql
+# Secure logs
+chmod 700 ~/Documents/private/logs/
 ```
 
-## Performance Tuning
+## Process Management
 
-### For Large Insight Databases
+The system uses PID files for reliable process tracking:
+
+### PID Files
+
+Located in `~/Documents/private/pids/`:
+- `memory_api.pid` - API server process ID
+- `memory_mcp.pid` - MCP server process ID (if running)
+
+### Health Checks
+
+The startup script polls the `/status` endpoint for up to 30 seconds:
+- Checks every 1 second
+- Verifies HTTP 200 response
+- Confirms JSON response format
+
+### Graceful Shutdown
+
+1. Reads PID from file
+2. Sends SIGTERM for graceful shutdown
+3. Waits up to 5 seconds
+4. Sends SIGKILL if still running
+5. Removes PID file
+
+## Customization
+
+### Adding New Entities
 
 Edit `insight_system_simple.py`:
 
 ```python
-class SimpleContextualInsightRetrieval:
-    def __init__(self, db_path="insights.db"):
-        # Reduce search results for faster queries
-        self.max_search_results = 100
-        
-        # Increase cache size for better performance  
-        self.cache_size = 100
-        
-        # Optimize database connections
-        self.connection_pool_size = 5
+def _initialize_triggers(self):
+    return {
+        "A": SemanticTrigger(
+            entity="A",
+            keywords={"trust", "relationship", "trustworthy"},
+            max_surface_insights=3
+        ),
+        # Add your own:
+        "project_name": SemanticTrigger(
+            entity="project_name",
+            keywords={"deadline", "milestone", "deliverable"},
+            max_surface_insights=2
+        )
+    }
 ```
 
-### Database Optimization
-
-```sql
--- Add indexes for better query performance
-CREATE INDEX idx_content_fts ON insights USING fts(content);
-CREATE INDEX idx_entities_gin ON insights USING gin(entities);
-
--- Analyze tables for query planner
-ANALYZE insights;
-```
-
-### Memory Usage Optimization
+### Adjusting Insight Retrieval
 
 ```python
 # In insight_system_simple.py
-class LayeredArchitecture:
-    def __init__(self):
-        # Reduce limits for lower memory usage
-        self.surface_limit = 3
-        self.mid_limit = 8
-        self.deep_limit = 20
+def retrieve_contextual_insights(self, user_input: str, max_insights: int = 5):
+    # Adjust these limits:
+    surface = [i for i in all_insights if i.layer == "surface"][:3]  # Top 3
+    mid = [i for i in all_insights if i.layer == "mid"][:5]          # Top 5
+    deep = [i for i in all_insights if i.layer == "deep"][:max_insights]
 ```
 
-## Advanced Debugging
+## Database Management
 
-### Enable Debug Logging
+### Backup
 
 ```bash
-export MEMORY_LOG_LEVEL=DEBUG
-export MEMORY_DEBUG_SQL=true
-./start_interactive_memory.sh
+# Simple backup
+cp ~/Documents/private/memory_data/personal_insights.db \
+   ~/Documents/private/memory_data/backup_$(date +%Y%m%d).db
+
+# SQL dump
+sqlite3 ~/Documents/private/memory_data/personal_insights.db .dump > backup.sql
 ```
 
-### Log Files
+### Restore
 
 ```bash
-# System logs
-tail -f ~/Documents/private/memory_data/memory_system.log
+# From backup file
+cp ~/Documents/private/memory_data/backup_20240115.db \
+   ~/Documents/private/memory_data/personal_insights.db
 
-# API access logs  
-tail -f ~/Documents/private/memory_data/api_access.log
-
-# Hook execution logs
-tail -f ~/Documents/private/memory_data/hooks.log
+# From SQL dump
+sqlite3 ~/Documents/private/memory_data/personal_insights.db < backup.sql
 ```
 
-### Database Inspection
+### Inspect Database
 
 ```bash
 sqlite3 ~/Documents/private/memory_data/personal_insights.db
 
-# Useful queries
+# Useful queries:
 .schema insights
 SELECT COUNT(*) FROM insights;
 SELECT insight_type, COUNT(*) FROM insights GROUP BY insight_type;
 SELECT * FROM insights WHERE effectiveness_score > 0.9;
+SELECT DISTINCT entities FROM insights;
 ```
 
-### MCP Server Debugging
+## Troubleshooting
 
+### Common Issues
+
+**1. Memory server won't start**
 ```bash
-# Test MCP server directly
-cd /path/to/memory
+# Check what's wrong
+./therapy.sh status
+
+# View logs
+cat logs/memory_api.log
+
+# Check if port is in use
+lsof -i :8001
+
+# Full restart
+./therapy.sh stop
+./therapy.sh start
+```
+
+**2. Dependencies missing**
+```bash
+# Reinstall
 source memory_env/bin/activate
-python3 memory_mcp_server_simple.py --debug
+pip install -r requirements_simple.txt
+deactivate
+./therapy.sh restart
 ```
 
-### Hook Debugging
+**3. Claude Code can't connect**
+```bash
+# Ensure system is running
+./therapy.sh status
+
+# Test MCP server
+python3 test_mcp_server.py
+
+# Check config
+cat ~/.config/claude-code/mcp_servers.json
+
+# Restart Claude Code completely
+```
+
+**4. Permission denied errors**
+```bash
+# Make scripts executable
+chmod +x therapy.sh therapy_wrapper.sh start_interactive_memory.sh
+
+# Check database permissions
+ls -la memory_data/
+```
+
+**5. Health check fails**
+```bash
+# Check logs for errors
+cat logs/memory_api.log
+
+# Test manually
+curl http://localhost:8001/status
+
+# Check if Python process started
+ps aux | grep memory_api
+```
+
+## Testing
+
+### Quick Tests
 
 ```bash
-# Test hooks manually
-python3 claude_hooks/user_prompt_submit.py "test prompt"
-python3 claude_hooks/post_response.py
+# Test API connection
+python3 test_memory_system.py
+
+# Test MCP server
+python3 test_mcp_server.py
+
+# Run full suite
+python3 test_system.py
 ```
 
-## Security Considerations
-
-### Data Privacy
-
-- Insights database contains personal information
-- Database file should have restrictive permissions:
-  ```bash
-  chmod 600 ~/Documents/private/memory_data/personal_insights.db
-  ```
-
-### Network Security
-
-- API server runs on localhost only (127.0.0.1)
-- No external network access required
-- MCP server uses local pipes/sockets
-
-### File Permissions
+### Manual API Testing
 
 ```bash
-# Set secure permissions
-chmod 700 ~/Documents/private/memory_data/
-chmod 600 ~/Documents/private/memory_data/*
-chmod +x claude_hooks/*.py
-```
-
-## Development and Contributing
-
-### Code Structure
-
-```
-memory/
-├── insight_system_simple.py         # Core insight system
-├── memory_api.py                    # HTTP API server
-├── claude_memory_client.py          # Client library
-├── memory_mcp_server_simple.py      # MCP server
-├── claude_hooks.py                  # Hook implementations
-├── claude_hooks/                    # Hook scripts directory
-│   ├── user_prompt_submit.py        #   Pre-prompt processing hook
-│   └── post_response.py             #   Post-response processing hook
-├── setup_env.py                     # Environment setup
-├── setup_claude_integration.py      # Claude integration setup
-├── therapy.sh                       # System management script
-├── start_interactive_memory.sh      # Interactive memory launcher
-├── start_mcp_server.sh             # MCP server startup
-├── test_system.py                   # Main test suite
-├── test_access_restriction.py       # Security tests
-├── extract_conversation_insights.py # Conversation analysis
-├── config.py                        # Configuration management
-├── logging_config.py                # Logging configuration
-├── requirements_simple.txt          # Python dependencies
-├── .env.example                     # Environment template
-├── CLAUDE.md                        # Claude Code integration docs
-├── logs/                            # Log files directory
-│   └── claude_memory.log            #   System log file
-├── README.md                        # User documentation
-└── README2.md                       # Technical documentation
-```
-
-### Adding New Features
-
-1. **New Insight Types**: Edit `_classify_insight_type()` in `insight_system_simple.py`
-2. **New Triggers**: Add to `_initialize_triggers()` 
-3. **New API Endpoints**: Add routes to `memory_api.py`
-4. **New MCP Tools**: Add methods to `memory_mcp_server_simple.py`
-
-### Testing Changes
-
-```bash
-# Run full test suite
+# Activate environment
 source memory_env/bin/activate
+
+# Test status endpoint
+curl http://localhost:8001/status
+
+# Test query (requires token)
+python3 -c "
+from claude_memory_client import MemoryClient
+client = MemoryClient()
+result = client.query_memory('trust')
+print(result)
+"
+```
+
+## Performance
+
+The system is designed for personal use:
+- Handles hundreds of insights efficiently
+- Query time typically < 50ms
+- Low memory footprint (~50MB)
+- Startup time ~2-3 seconds
+
+For larger datasets, see optimization tips in the Technical Documentation section below.
+
+## Security
+
+- **Local only**: API binds to 127.0.0.1 (localhost)
+- **Token authentication**: HMAC-based tokens per directory
+- **No external access**: No internet connection required
+- **Private data**: Database stored locally only
+
+## Logging
+
+Logs are written to `logs/memory_api.log`:
+
+```bash
+# Watch logs in real-time
+tail -f logs/memory_api.log
+
+# View errors only
+grep ERROR logs/memory_api.log
+
+# Last 50 lines
+tail -50 logs/memory_api.log
+```
+
+## Auto-Start on Login (Optional)
+
+Add to `~/.zshrc` or `~/.bash_profile`:
+
+```bash
+# Start memory system on login
+~/Documents/private/therapy.sh start > /dev/null 2>&1
+```
+
+## Support Files
+
+- **QUICK_REFERENCE.md** - Daily usage commands
+- **CLAUDE.md** - Claude Code integration details
+- **.env.example** - Environment variable template
+
+## Technical Details
+
+For advanced topics, see sections below:
+- API authentication details
+- Database optimization
+- Custom trigger configuration
+- Hook system implementation
+- Performance tuning
+
+---
+
+## Advanced Topics
+
+### Custom Semantic Triggers
+
+Create specialized triggers for your use case:
+
+```python
+# In insight_system_simple.py
+SemanticTrigger(
+    entity="work_project",
+    keywords={"deadline", "sprint", "standup", "backlog"},
+    max_surface_insights=3,
+    context_patterns=[
+        r"project.*stuck",
+        r"team.*struggling",
+        r"deadline.*approaching"
+    ]
+)
+```
+
+### Effectiveness Scoring
+
+Insights are ranked by effectiveness (0.0 to 1.0):
+- **1.0**: Absolute truths, always helpful
+- **0.8-0.9**: Highly effective strategies
+- **0.6-0.7**: Usually helpful observations
+- **0.4-0.5**: Context-dependent insights
+- **< 0.4**: Historical or deprecated
+
+### Layer System
+
+**Surface** (limit: 3) - Most immediately relevant
+- Displayed first in responses
+- Highest effectiveness scores
+- Most recent and applicable
+
+**Mid** (limit: 5) - Supporting context
+- Additional relevant insights
+- Moderate effectiveness
+- Broader applicability
+
+**Deep** (limit: configurable) - Historical patterns
+- Long-term trends
+- Lower immediate relevance
+- Useful for comprehensive analysis
+
+### Crisis Detection
+
+The system activates special handling when detecting:
+
+```python
+CRISIS_PATTERNS = [
+    r'\b(?:kill|harm|hurt|suicide)\s+(?:myself|me)\b',
+    r'\bsuicidal\s+(?:thoughts|ideation)\b',
+    r'\bcan\'?t\s+(?:take|handle)\s+this\s+anymore\b',
+    r'\beveryone.*better.*without\s+me\b',
+]
+```
+
+**Crisis Mode Behavior:**
+- Surfaces ALL anchor insights immediately
+- Returns strategies with effectiveness > 0.8
+- No progressive disclosure
+- Focuses on grounding and coping
+
+### Database Optimization
+
+For datasets with 1000+ insights:
+
+```sql
+-- Additional indexes
+CREATE INDEX idx_content_lower ON insights(LOWER(content));
+CREATE INDEX idx_composite ON insights(effectiveness_score DESC, timestamp DESC);
+
+-- Vacuum database periodically
+VACUUM;
+
+-- Analyze for query optimization
+ANALYZE;
+```
+
+### Rate Limiting Configuration
+
+Edit `config.py`:
+
+```python
+# Requests per minute
+RATE_LIMIT_PER_MINUTE = int(os.getenv('RATE_LIMIT_PER_MINUTE', '60'))
+
+# In memory_api.py, can set per-endpoint limits:
+@app.route('/query', methods=['POST'])
+@limiter.limit("30 per minute")  # More restrictive for expensive queries
+def query_insights():
+    ...
+```
+
+### Timeout Configuration
+
+```python
+# In config.py
+CONNECTION_TIMEOUT = 5   # Initial connection
+READ_TIMEOUT = 10        # Wait for response
+
+# Health check settings
+HEALTH_CHECK_RETRIES = 30        # Number of attempts
+HEALTH_CHECK_INTERVAL = 1.0      # Seconds between attempts
+```
+
+## Development
+
+### Running Tests
+
+```bash
+source memory_env/bin/activate
+
+# Unit tests
 python3 test_system.py
 
-# Test specific components
-python3 -m pytest tests/ -v
+# Integration tests  
+python3 test_access_restriction.py
 
-# Manual API testing
-curl -X POST http://localhost:8001/query -d '{"query": "test"}'
+# Manual testing
+python3 claude_memory_client.py
+```
+
+### Adding New API Endpoints
+
+Edit `memory_api.py`:
+
+```python
+@app.route('/new_endpoint', methods=['GET'])
+@limiter.limit("60 per minute")
+def new_endpoint():
+    """Description of what this does"""
+    if not verify_access_token():
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    try:
+        # Your logic here
+        return jsonify({"result": "success"})
+    except Exception as e:
+        logger.error(f"Error in new_endpoint: {e}", exc_info=True)
+        return jsonify({"error": "Internal server error"}), 500
+```
+
+### Adding New MCP Tools
+
+Edit `memory_mcp_server_simple.py`:
+
+```python
+# In tools/list response
+{
+    "name": "new_tool",
+    "description": "What this tool does",
+    "inputSchema": {
+        "type": "object",
+        "properties": {
+            "param": {"type": "string", "description": "Parameter description"}
+        },
+        "required": ["param"]
+    }
+}
+
+# In tools/call handler
+elif tool_name == "new_tool":
+    return await self.new_tool(msg_id, arguments)
+```
+
+### Logging Configuration
+
+Edit `logging_config.py`:
+
+```python
+# Change log level
+logger.setLevel(logging.DEBUG)  # DEBUG, INFO, WARNING, ERROR
+
+# Change log format
+formatter = logging.Formatter(
+    '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+
+# Rotate logs more frequently
+file_handler = logging.handlers.RotatingFileHandler(
+    'logs/memory.log',
+    maxBytes=5 * 1024 * 1024,  # 5MB
+    backupCount=10  # Keep 10 old logs
+)
+```
+
+## Performance Tuning
+
+### For Large Datasets (1000+ insights)
+
+```python
+# In insight_system_simple.py
+class SimpleContextualInsightRetrieval:
+    def retrieve_contextual_insights(self, user_input: str, max_insights: int = 5):
+        # Limit database queries
+        all_insights.sort(
+            key=lambda x: (x.effectiveness_score, -(datetime.now() - x.timestamp).days),
+            reverse=True
+        )[:50]  # Only consider top 50
+```
+
+### Memory Usage
+
+The system uses minimal memory:
+- ~20MB baseline (Flask + dependencies)
+- ~5-10MB per 1000 insights in memory
+- SQLite uses minimal RAM (queries on disk)
+
+### Query Optimization
+
+```python
+# In insight_system_simple.py
+def _get_insights_by_entity(self, entity: str) -> List[Insight]:
+    # Add LIMIT clause to SQL
+    cursor.execute('''
+        SELECT * FROM insights 
+        WHERE entities LIKE ? 
+        ORDER BY effectiveness_score DESC, timestamp DESC
+        LIMIT 100
+    ''', (f'%{entity}%',))
+```
+
+## Security Best Practices
+
+### 1. Set a Strong Secret Key
+
+```bash
+# Generate a random key
+python3 -c "import secrets; print(secrets.token_hex(32))"
+
+# Set it in your environment
+export SECRET_KEY="<generated-key>"
+```
+
+### 2. Restrict File Permissions
+
+```bash
+chmod 600 ~/Documents/private/memory_data/personal_insights.db
+chmod 700 ~/Documents/private/memory_data/
+chmod 700 ~/Documents/private/pids/
+chmod 700 ~/Documents/private/logs/
+```
+
+### 3. Limit Network Access
+
+The API already binds to localhost only (127.0.0.1), but you can additionally:
+
+```bash
+# Firewall rule (if needed)
+sudo iptables -A INPUT -p tcp --dport 8001 ! -s 127.0.0.1 -j DROP
+```
+
+### 4. Allowed Directories
+
+Restrict which directories can access the API:
+
+```python
+# In config.py
+ALLOWED_PROJECT_DIRS = os.getenv('ALLOWED_PROJECT_DIRS', 
+    '~/Documents/private,~/Projects/therapy').split(',')
+```
+
+## Maintenance
+
+### Log Rotation
+
+Logs rotate automatically:
+- Max size: 10MB per file
+- Keep 5 backup files
+- Total max: 50MB of logs
+
+### Database Cleanup
+
+```sql
+-- Remove old low-effectiveness insights
+DELETE FROM insights 
+WHERE effectiveness_score < 0.3 
+AND timestamp < datetime('now', '-6 months');
+
+-- Remove superseded insights
+DELETE FROM insights WHERE superseded_by IS NOT NULL;
+
+-- Vacuum to reclaim space
+VACUUM;
+```
+
+### System Health Checks
+
+```bash
+# Check system health
+./therapy.sh status
+
+# Check database integrity
+sqlite3 ~/Documents/private/memory_data/personal_insights.db "PRAGMA integrity_check;"
+
+# Check disk space
+df -h ~/Documents/private/memory_data/
+
+# Check log size
+du -h ~/Documents/private/logs/
+```
+
+## Monitoring
+
+### Key Metrics to Watch
+
+1. **Query Performance**
+   - Should be < 100ms for most queries
+   - Check `query_time` in API responses
+
+2. **Database Size**
+   - Typical: ~1KB per insight
+   - Alert if > 100MB
+
+3. **Log Growth**
+   - Should stay under 50MB total
+   - Rotate if growing quickly
+
+4. **Memory Usage**
+   - Normal: 20-50MB
+   - Alert if > 200MB
+
+### Log Analysis
+
+```bash
+# Count queries per hour
+grep "Querying insights" logs/memory_api.log | wc -l
+
+# Average query time
+grep "Query completed" logs/memory_api.log | \
+  awk '{print $NF}' | \
+  awk '{sum+=$1; count++} END {print sum/count}'
+
+# Error rate
+grep ERROR logs/memory_api.log | wc -l
+```
+
+## File Structure
+
+```
+~/Documents/private/
+├── config.py                      # Configuration
+├── logging_config.py              # Logging setup
+├── insight_system_simple.py       # Core insight system
+├── claude_memory_client.py        # Client library
+├── memory_api.py                  # API server
+├── memory_mcp_server_simple.py    # MCP server
+├── therapy.sh                     # Control script
+├── therapy_wrapper.sh             # Implementation
+├── start_interactive_memory.sh    # Alternative starter
+├── setup_env.py                   # Environment setup
+├── requirements_simple.txt        # Dependencies
+├── README.md                      # User docs
+├── README2.md                     # This file
+├── QUICK_REFERENCE.md             # Quick commands
+├── logs/                          # Log files
+│   └── memory_api.log
+├── pids/                          # Process IDs
+│   └── memory_api.pid
+├── memory_data/                   # Database
+│   └── personal_insights.db
+└── memory_env/                    # Virtual environment
+    ├── bin/
+    ├── lib/
+    └── pyvenv.cfg
 ```
 
 ## License
